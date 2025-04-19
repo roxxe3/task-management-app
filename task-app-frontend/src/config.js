@@ -10,9 +10,9 @@ export const DEFAULT_CATEGORIES = [
 
 // Priority settings with colors
 export const PRIORITY_COLORS = {
-  high: "bg-[#caff17]",
-  medium: "bg-[#939494]",
-  low: "bg-[#4f5251]",
+  high: "bg-red-500",
+  medium: "bg-yellow-500",
+  low: "bg-green-500",
 };
 
 // Category icon mapping - only keeping the ones we actually use

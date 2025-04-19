@@ -114,12 +114,17 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
                   type="button"
                   key={priority}
                   onClick={() => setEditedTask({ ...editedTask, priority })}
-                  className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 ${
                     editedTask.priority === priority
-                      ? `${priorityColors[priority]} text-white`
-                      : "bg-gray-100 text-gray-700"
+                      ? priority === 'high'
+                        ? 'bg-red-500 text-white'
+                        : priority === 'medium'
+                          ? 'bg-yellow-500 text-black'
+                          : 'bg-green-500 text-white'
+                      : "bg-[#3d3d3d] text-gray-300 hover:bg-[#4d4d4d]"
                   }`}
                 >
+                  <i className={`fas fa-flag mr-2 ${editedTask.priority === priority ? 'text-current' : 'text-gray-400'}`}></i>
                   {priority}
                 </button>
               ))}
@@ -194,18 +199,27 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
             </div>
             <div className="flex items-center">
               <span
-                className={`h-2.5 w-2.5 rounded-full ${priorityColors[task.priority]} mr-1`}
-              ></span>
-              <span className="capitalize">
-                {task.priority} priority
+                className={`px-2 py-0.5 rounded-md text-xs font-medium mr-2 ${
+                  task.priority === 'high' 
+                    ? 'bg-red-500 text-white' 
+                    : task.priority === 'medium'
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-green-500 text-white'
+                }`}
+              >
+                <i className="fas fa-flag mr-1"></i>
+                {task.priority}
               </span>
             </div>
           </div>
         </div>
         <div
-          className="px-3 py-1 rounded-full text-xs mr-3"
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium mr-3 transition-all duration-200 ${
+            task.completed ? 'opacity-60' : ''
+          }`}
           style={getCategoryStyle()}
         >
+          <i className={`fas ${categories?.find(c => c.id === task.category_id)?.icon || 'fa-folder'} mr-2`}></i>
           {task.category_name || "Uncategorized"}
         </div>
         <div className="flex gap-2">
