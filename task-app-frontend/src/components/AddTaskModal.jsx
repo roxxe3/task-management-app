@@ -1,13 +1,14 @@
 import React, { useRef, useEffect } from "react";
 
-const AddTaskModal = ({ 
-  isModalOpen, 
-  setIsModalOpen, 
-  newTask, 
-  setNewTask, 
+const AddTaskModal = ({
+  isModalOpen,
+  setIsModalOpen,
+  newTask,
+  setNewTask,
   handleAddTask,
   categories,
-  priorityColors
+  priorityColors,
+  isLoading,
 }) => {
   const modalRef = useRef(null);
 
@@ -39,6 +40,7 @@ const AddTaskModal = ({
             id="closeModalButton"
             onClick={() => setIsModalOpen(false)}
             className="text-gray-500 hover:text-gray-700"
+            disabled={isLoading}
           >
             <i className="fas fa-times"></i>
           </button>
@@ -57,6 +59,7 @@ const AddTaskModal = ({
               }
               className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
               placeholder="Enter task title"
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -66,19 +69,19 @@ const AddTaskModal = ({
             <div className="relative">
               <select
                 id="taskCategorySelect"
-                value={newTask.category}
+                value={newTask.category_id}
                 onChange={(e) =>
-                  setNewTask({ ...newTask, category: e.target.value })
+                  setNewTask({ ...newTask, category_id: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
+                disabled={isLoading}
               >
-                {categories
-                  .filter((cat) => cat.id !== "All")
-                  .map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.id}
-                    </option>
-                  ))}
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name || category.id}
+                  </option>
+                ))}
               </select>
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <i className="fas fa-chevron-down text-gray-400"></i>
@@ -98,6 +101,7 @@ const AddTaskModal = ({
                   setNewTask({ ...newTask, dueDate: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -112,6 +116,7 @@ const AddTaskModal = ({
                   setNewTask({ ...newTask, dueTime: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -130,6 +135,7 @@ const AddTaskModal = ({
                       ? `${priorityColors[priority]} text-white`
                       : "bg-gray-100 text-gray-700"
                   }`}
+                  disabled={isLoading}
                 >
                   {priority}
                 </button>
@@ -148,6 +154,7 @@ const AddTaskModal = ({
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none"
               placeholder="Enter task description"
+              disabled={isLoading}
             ></textarea>
           </div>
         </div>
@@ -156,6 +163,7 @@ const AddTaskModal = ({
             id="cancelButton"
             onClick={() => setIsModalOpen(false)}
             className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] !rounded-button whitespace-nowrap"
+            disabled={isLoading}
           >
             Cancel
           </button>
@@ -164,8 +172,16 @@ const AddTaskModal = ({
             onClick={handleAddTask}
             className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap"
             style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+            disabled={isLoading}
           >
-            Add Task
+            {isLoading ? (
+              <>
+                <i className="fas fa-circle-notch fa-spin mr-2"></i>
+                Adding...
+              </>
+            ) : (
+              'Add Task'
+            )}
           </button>
         </div>
       </div>

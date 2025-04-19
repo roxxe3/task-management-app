@@ -15,7 +15,7 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory }) => {
             onClick={() => setActiveCategory(category.id)}
           >
             <i className={`fas ${category.icon}`}></i>
-            <span>{category.id}</span>
+            <span>{category.name}</span>
           </button>
         ))}
       </div>

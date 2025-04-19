@@ -2,12 +2,59 @@ import React, { useState } from "react";
 import { useAuth } from "./AuthContext";
 
 const Login = () => {
-  const { login } = useAuth();
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const { login, signup, isLoading, error, setError } = useAuth();
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [formData, setFormData] = useState({ 
+    email: "", 
+    password: "",
+    name: "",
+  });
 
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(loginData.email, loginData.password);
+    setError(null);
+    
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      setError("Please enter both email and password");
+      return;
+    }
+    
+    try {
+      let success;
+      
+      if (isLoginMode) {
+        // Handle login
+        success = await login(formData.email, formData.password);
+      } else {
+        // Handle signup - additional validation
+        if (formData.password.length < 6) {
+          setError("Password must be at least 6 characters");
+          return;
+        }
+        
+        success = await signup(formData.email, formData.password, formData.name);
+      }
+      
+      if (!success) {
+        // Error is set by the login/signup functions
+        console.log("Authentication failed");
+      }
+    } catch (err) {
+      console.error("Form submission error:", err);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ 
+      ...formData, 
+      [e.target.name]: e.target.value 
+    });
+  };
+
+  const toggleMode = () => {
+    setIsLoginMode(!isLoginMode);
+    setError(null);
   };
 
   return (
@@ -17,53 +64,93 @@ const Login = () => {
     >
       <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          Login to Your Account
+          {isLoginMode ? "Login to Your Account" : "Create an Account"}
         </h2>
-        <form onSubmit={handleLogin} className="space-y-6">
+        
+        {error && (
+          <div className="bg-red-500 text-white p-3 rounded-lg mb-4 text-center">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Email
             </label>
             <input
               type="email"
-              value={loginData.email}
-              onChange={(e) =>
-                setLoginData({ ...loginData, email: e.target.value })
-              }
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className="w-full px-3 py-2 bg-[#3d3d3d] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
               placeholder="Enter your email"
               required
+              disabled={isLoading}
             />
           </div>
+          
+          {!isLoginMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Name (Optional)
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-[#3d3d3d] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
+                placeholder="Enter your name"
+                disabled={isLoading}
+              />
+            </div>
+          )}
+          
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Password
             </label>
             <input
               type="password"
-              value={loginData.password}
-              onChange={(e) =>
-                setLoginData({ ...loginData, password: e.target.value })
-              }
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               className="w-full px-3 py-2 bg-[#3d3d3d] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
-              placeholder="Enter your password"
+              placeholder={isLoginMode ? "Enter your password" : "Choose a password (min. 6 characters)"}
               required
+              disabled={isLoading}
             />
           </div>
+          
           <button
             type="submit"
             className="w-full py-2 px-4 rounded-lg font-medium !rounded-button whitespace-nowrap"
             style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? (
+              <>
+                <i className="fas fa-circle-notch fa-spin mr-2"></i>
+                {isLoginMode ? "Logging in..." : "Creating account..."}
+              </>
+            ) : (
+              isLoginMode ? 'Login' : 'Sign Up'
+            )}
           </button>
-          <p className="text-sm text-gray-400 text-center mt-4">
-            Demo credentials:
-            <br />
-            Email: user@example.com
-            <br />
-            Password: password
-          </p>
+          
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-sm text-gray-400 hover:text-white"
+              disabled={isLoading}
+            >
+              {isLoginMode 
+                ? "Don't have an account? Sign up" 
+                : "Already have an account? Log in"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

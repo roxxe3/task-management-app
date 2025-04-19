@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 const ProfileMenu = ({ isOpen, setIsOpen }) => {
@@ -45,13 +46,14 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
           ref={profileDropdownRef}
           className="absolute right-0 mt-2 w-56 bg-[#2d2d2d] rounded-xl shadow-lg py-2 z-50"
         >
-          <button
-            id="profileOption"
+          <Link
+            to="/profile"
             className="w-full px-4 py-3 text-left hover:bg-[#3d3d3d] flex items-center space-x-3 text-white"
+            onClick={() => setIsOpen(false)}
           >
             <i className="fas fa-user-circle w-5"></i>
             <span>My Profile</span>
-          </button>
+          </Link>
           <button
             id="settingsOption"
             className="w-full px-4 py-3 text-left hover:bg-[#3d3d3d] flex items-center space-x-3 text-white"

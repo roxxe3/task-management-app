@@ -1,0 +1,29 @@
+// Configuration settings for the frontend application
+
+// API base URL - points to our backend server
+export const API_URL = 'http://localhost:5000/api';
+
+// Default categories with icons
+export const DEFAULT_CATEGORIES = [
+  { id: "All", name: "All Tasks", icon: "fa-border-all" },
+];
+
+// Priority settings with colors
+export const PRIORITY_COLORS = {
+  high: "bg-[#caff17]",
+  medium: "bg-[#939494]",
+  low: "bg-[#4f5251]",
+};
+
+// Category icon mapping
+export const CATEGORY_ICONS = {
+  "Personal": "fa-user",
+  "Work": "fa-briefcase",
+  "Shopping": "fa-shopping-cart",
+  "Health": "fa-heartbeat",
+  "Finance": "fa-money-bill-wave",
+  "Education": "fa-graduation-cap",
+  "Home": "fa-home",
+  "Travel": "fa-plane",
+  "Entertainment": "fa-film",
+};
