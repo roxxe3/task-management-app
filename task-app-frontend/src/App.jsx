@@ -21,8 +21,6 @@ const Dashboard = () => {
   const [newTask, setNewTask] = useState({
     title: "",
     category_id: "",
-    dueDate: "",
-    dueTime: "",
     priority: "medium",
     description: "",
   });
@@ -106,15 +104,12 @@ const Dashboard = () => {
     
     try {
       setIsLoading(true);
-      // Format date/time for API
-      const dueDate = newTask.dueDate ? `${newTask.dueDate}${newTask.dueTime ? 'T' + newTask.dueTime : ''}` : null;
       
       const taskData = {
         title: newTask.title,
         category_id: newTask.category_id || null,
         priority: newTask.priority,
         description: newTask.description || "",
-        due_date: dueDate,
         completed: false
       };
       
@@ -135,8 +130,6 @@ const Dashboard = () => {
       setNewTask({
         title: "",
         category_id: "",
-        dueDate: "",
-        dueTime: "",
         priority: "medium",
         description: "",
       });
@@ -181,6 +174,31 @@ const Dashboard = () => {
       console.error("Error updating task:", err);
       setError("Failed to update task. Please try again.");
     }
+  };
+
+  // Handle deleting a task
+  const handleDeleteTask = async (id) => {
+    try {
+      const taskToDelete = tasks.find(task => task.id === id);
+      if (!taskToDelete) return;
+      
+      // Optimistically update UI
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+      
+      // Then delete from backend
+      await deleteTask(id);
+      
+    } catch (err) {
+      console.error("Error deleting task:", err);
+      setError("Failed to delete task. Please try again.");
+      // Revert the UI change on error
+      setTasks(prevTasks => [...prevTasks]);
+    }
+  };
+
+  // Handle reordering tasks
+  const handleReorderTasks = (reorderedTasks) => {
+    setTasks(reorderedTasks);
   };
 
   // Filter tasks based on category and search query
@@ -251,9 +269,13 @@ const Dashboard = () => {
             ) : (
               <TaskList 
                 filteredTasks={filteredTasks} 
-                toggleTaskCompletion={toggleTaskCompletion} 
+                toggleTaskCompletion={toggleTaskCompletion}
+                handleDeleteTask={handleDeleteTask}
                 priorityColors={PRIORITY_COLORS}
                 searchQuery={searchQuery}
+                onAddTask={() => setIsModalOpen(true)}
+                onReorderTasks={handleReorderTasks}
+                categories={categories.filter(cat => cat.id !== "All")}
               />
             )}
           </>

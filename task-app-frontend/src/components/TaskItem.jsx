@@ -1,55 +1,164 @@
-import React from "react";
+import React, { useState } from "react";
+import { updateTask } from "../services/taskService";
 
-const TaskItem = ({ task, toggleTaskCompletion, priorityColors }) => {
+const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors, onTaskUpdated, categories }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState({
+    title: task.title,
+    description: task.description || "",
+    priority: task.priority,
+    category_id: task.category_id
+  });
+
   // Format date from API (expects ISO format or similar)
   const formatDate = (dateString) => {
-    if (!dateString) return "No due date";
+    if (!dateString) return "No date";
     
     try {
       const date = new Date(dateString);
       
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        return dateString; // Return the original string if parsing fails
+        return dateString;
       }
       
-      // Format the date
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      
-      // Check if date is today or tomorrow
-      if (date.toDateString() === today.toDateString()) {
-        return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      } else if (date.toDateString() === tomorrow.toDateString()) {
-        return `Tomorrow, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      } else {
-        return date.toLocaleDateString('en-US', { 
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
+      return date.toLocaleDateString('en-US', { 
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (error) {
       console.error("Error formatting date:", error);
-      return dateString; // Return original if any error
+      return dateString;
     }
   };
 
   // Get category style based on category data
-  const getCategoryStyle = () => {
-    if (!task.category_id) {
+  const getCategoryStyle = (categoryId = task.category_id) => {
+    const category = categories?.find(c => c.id === categoryId);
+    if (!categoryId || !category) {
       return {
         backgroundColor: "#2d2d2d",
         color: "#ffffff"
       };
     }
     return {
-      backgroundColor: task.color || "#2d2d2d",
+      backgroundColor: category.color || "#2d2d2d",
       color: "#ffffff"
     };
   };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedTask = await updateTask(task.id, editedTask);
+      setIsEditing(false);
+      if (onTaskUpdated) {
+        onTaskUpdated(updatedTask);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={editedTask.title}
+              onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
+              placeholder="Task title"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Category <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                value={editedTask.category_id || ""}
+                onChange={(e) => setEditedTask({ ...editedTask, category_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
+              >
+                <option value="">Select a category</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <i className="fas fa-chevron-down text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Priority
+            </label>
+            <div className="flex space-x-4">
+              {["high", "medium", "low"].map((priority) => (
+                <button
+                  type="button"
+                  key={priority}
+                  onClick={() => setEditedTask({ ...editedTask, priority })}
+                  className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap ${
+                    editedTask.priority === priority
+                      ? `${priorityColors[priority]} text-white`
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {priority}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Description
+            </label>
+            <textarea
+              value={editedTask.description}
+              onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none bg-[#3d3d3d] text-white"
+              placeholder="Description (optional)"
+              rows="2"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-4 mt-6">
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap"
+              style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -75,10 +184,13 @@ const TaskItem = ({ task, toggleTaskCompletion, priorityColors }) => {
           >
             {task.title}
           </h3>
+          {task.description && (
+            <p className="text-sm text-gray-400 mt-1">{task.description}</p>
+          )}
           <div className="flex items-center mt-2 text-sm text-gray-500">
             <div className="flex items-center mr-4">
-              <i className="far fa-clock mr-1"></i>
-              <span>{formatDate(task.due_date)}</span>
+              <i className="far fa-calendar mr-1"></i>
+              <span>Created: {formatDate(task.created_at)}</span>
             </div>
             <div className="flex items-center">
               <span
@@ -91,10 +203,26 @@ const TaskItem = ({ task, toggleTaskCompletion, priorityColors }) => {
           </div>
         </div>
         <div
-          className="px-3 py-1 rounded-full text-xs"
+          className="px-3 py-1 rounded-full text-xs mr-3"
           style={getCategoryStyle()}
         >
           {task.category_name || "Uncategorized"}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="text-gray-500 hover:text-blue-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
+            onClick={() => setIsEditing(true)}
+            title="Edit task"
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
+            onClick={() => handleDeleteTask(task.id)}
+            title="Delete task"
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
         </div>
       </div>
     </div>

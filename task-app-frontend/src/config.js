@@ -15,15 +15,10 @@ export const PRIORITY_COLORS = {
   low: "bg-[#4f5251]",
 };
 
-// Category icon mapping
+// Category icon mapping - only keeping the ones we actually use
 export const CATEGORY_ICONS = {
   "Personal": "fa-user",
   "Work": "fa-briefcase",
   "Shopping": "fa-shopping-cart",
   "Health": "fa-heartbeat",
-  "Finance": "fa-money-bill-wave",
-  "Education": "fa-graduation-cap",
-  "Home": "fa-home",
-  "Travel": "fa-plane",
-  "Entertainment": "fa-film",
 };

@@ -101,3 +101,25 @@ export const deleteCategory = async (id) => {
     throw error;
   }
 };
+
+// Fetch a single category by ID
+export const fetchCategory = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/categories/${id}`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error("Authentication error: Please log in again");
+      }
+      throw new Error("Failed to fetch category");
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching category:", error);
+    throw error;
+  }
+};

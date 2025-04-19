@@ -40,13 +40,14 @@ router.get("/", async (req, res) => {
   try {
     // Get authenticated Supabase client with user token
     const authToken = req.headers.authorization?.split(" ")[1];
-    const supabaseAuth = await getSupabaseWithAuth(authToken); // Add await here
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
     
     const { data, error } = await supabaseAuth
       .from("categories")
       .select("*")
-      .eq("user_id", req.user.id);
-      
+      .eq("user_id", req.user.id)
+      .order("name", { ascending: true });
+    
     if (error) {
       console.error("Supabase error fetching categories:", error);
       return res.status(500).json({ 
@@ -55,17 +56,53 @@ router.get("/", async (req, res) => {
         code: error.code 
       });
     }
-
-    // If no data or using mock client, return mock categories
-    if (!data || data.length === 0) {
-      console.log("No categories found in database, returning mock data");
-      return res.json(mockCategories);
+    
+    // If no categories found, return empty array
+    if (!data) {
+      return res.json([]);
     }
     
     res.json(data);
   } catch (err) {
     console.error("Unexpected error fetching categories:", err);
     res.status(500).json({ error: "Failed to fetch categories", details: err.message });
+  }
+});
+
+// GET /categories/:id - Get a single category
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get authenticated Supabase client with user token
+    const authToken = req.headers.authorization?.split(" ")[1];
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
+    
+    const { data, error } = await supabaseAuth
+      .from("categories")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", req.user.id)
+      .single();
+    
+    if (error) {
+      console.error("Supabase error fetching category:", error);
+      return res.status(500).json({ 
+        error: "Database error fetching category", 
+        details: error.message,
+        code: error.code 
+      });
+    }
+    
+    // Check if category exists
+    if (!data) {
+      return res.status(404).json({ error: "Category not found or you don't have permission to view it" });
+    }
+    
+    res.json(data);
+  } catch (err) {
+    console.error("Unexpected error fetching category:", err);
+    res.status(500).json({ error: "Failed to fetch category", details: err.message });
   }
 });
 

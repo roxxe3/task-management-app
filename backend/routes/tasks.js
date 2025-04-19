@@ -148,6 +148,58 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /tasks/:id - Get a single task
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get authenticated Supabase client with user token
+    const authToken = req.headers.authorization?.split(" ")[1];
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
+    
+    const { data, error } = await supabaseAuth
+      .from("tasks")
+      .select(`
+        *,
+        categories(id, name)
+      `)
+      .eq("id", id)
+      .eq("user_id", req.user.id)
+      .single();
+    
+    if (error) {
+      console.error("Supabase error fetching task:", error);
+      // Check if it's a mock task ID
+      const mockTask = mockTasks.find(task => task.id === id);
+      if (mockTask) {
+        return res.json(mockTask);
+      }
+      return res.status(500).json({ 
+        error: "Database error fetching task", 
+        details: error.message,
+        code: error.code 
+      });
+    }
+    
+    // Check if task exists
+    if (!data) {
+      return res.status(404).json({ error: "Task not found or you don't have permission to view it" });
+    }
+    
+    // Transform the returned data to include category name directly
+    const transformedTask = {
+      ...data,
+      category_name: data.categories ? data.categories.name : null,
+      categories: undefined // Remove the nested category object
+    };
+    
+    res.json(transformedTask);
+  } catch (err) {
+    console.error("Unexpected error fetching task:", err);
+    res.status(500).json({ error: "Failed to fetch task", details: err.message });
+  }
+});
+
 // POST /tasks - Create a new task
 router.post("/", async (req, res) => {
   try {

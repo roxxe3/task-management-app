@@ -106,3 +106,25 @@ export const deleteTask = async (id) => {
 export const toggleTaskCompletion = async (id, completed) => {
   return updateTask(id, { completed });
 };
+
+// Fetch a single task by ID
+export const fetchTask = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error("Authentication error: Please log in again");
+      }
+      throw new Error("Failed to fetch task");
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching task:", error);
+    throw error;
+  }
+};
