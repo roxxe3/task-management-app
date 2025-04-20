@@ -1,10 +1,77 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const TaskProgress = ({ tasks }) => {
-  const completedTasksCount = tasks.filter((task) => task.completed).length;
-  const completionPercentage = Math.round(
-    (completedTasksCount / tasks.length) * 100
-  ) || 0;
+  const [animatedPercentage, setAnimatedPercentage] = useState(0);
+  const [stats, setStats] = useState({
+    completed: 0,
+    total: 0,
+    percentage: 0
+  });
+  
+  // Ref to store previous animation timer
+  const animationTimerRef = useRef(null);
+
+  // Calculate stats
+  useEffect(() => {
+    const completedCount = tasks.filter(task => task.completed).length;
+    const totalCount = tasks.length;
+    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    setStats({
+      completed: completedCount,
+      total: totalCount,
+      percentage: percentage
+    });
+  }, [tasks]);
+
+  // Animate percentage on change with improved smoothness
+  useEffect(() => {
+    // Clear any existing animation timer
+    if (animationTimerRef.current) {
+      clearInterval(animationTimerRef.current);
+    }
+
+    // Don't animate if there's no change or on initial render with same value
+    if (animatedPercentage === stats.percentage) {
+      return;
+    }
+    
+    // Define animation parameters
+    const startValue = animatedPercentage;
+    const endValue = stats.percentage;
+    const duration = 800; // slightly faster for better responsiveness
+    const totalSteps = 30; // fewer steps for smoother transition
+    const stepDuration = duration / totalSteps;
+    let currentStep = 0;
+    
+    // Use easeOutQuad easing function for smoother animation
+    const easeOutQuad = (t) => t * (2 - t);
+
+    // Start animation
+    animationTimerRef.current = setInterval(() => {
+      currentStep++;
+      
+      if (currentStep >= totalSteps) {
+        setAnimatedPercentage(endValue);
+        clearInterval(animationTimerRef.current);
+        return;
+      }
+      
+      // Calculate current progress with easing
+      const progress = easeOutQuad(currentStep / totalSteps);
+      // Calculate the current value
+      const currentValue = startValue + (endValue - startValue) * progress;
+      
+      setAnimatedPercentage(currentValue);
+    }, stepDuration);
+    
+    // Clean up animation timer on unmount or when dependencies change
+    return () => {
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+      }
+    };
+  }, [stats.percentage, animatedPercentage]);
 
   const getMotivationalMessage = (percentage) => {
     if (percentage === 0) return "Ready to start your day? Let's tackle these tasks!";
@@ -32,27 +99,29 @@ const TaskProgress = ({ tasks }) => {
               fill="none"
               stroke="#caff17"
               strokeWidth="3"
-              strokeDasharray={`${completionPercentage}, 100`}
+              strokeDasharray={`${animatedPercentage}, 100`}
               strokeLinecap="round"
-              className="transition-all duration-500 ease-in-out"
+              className="transition-all duration-200 ease-out"
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-white text-lg font-bold">
-              {completionPercentage}%
+              {Math.round(animatedPercentage)}%
             </span>
           </div>
         </div>
         <div className="mt-4 md:mt-0 md:ml-8 text-center md:text-left flex-1">
-          <h3 className="text-xl md:text-2xl font-semibold mb-2">Today's Progress</h3>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+            <h3 className="text-xl md:text-2xl font-semibold">Progress</h3>
+          </div>
           <p className="text-gray-400 mb-2">
-            {completedTasksCount} of {tasks.length} tasks completed
+            {stats.completed} of {stats.total} tasks completed
           </p>
           <p 
             className="text-sm md:text-base transition-all duration-300" 
             style={{ color: "#caff17" }}
           >
-            {getMotivationalMessage(completionPercentage)}
+            {getMotivationalMessage(stats.percentage)}
           </p>
         </div>
       </div>

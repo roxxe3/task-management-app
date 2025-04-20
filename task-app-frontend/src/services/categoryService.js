@@ -1,12 +1,15 @@
 // Category API service for handling all category-related requests
 import { API_URL } from "../config";
 
-// Helper function to get auth headers
+// Get auth headers for API requests
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
+    'Authorization': `Bearer ${token}`
   };
 };
 

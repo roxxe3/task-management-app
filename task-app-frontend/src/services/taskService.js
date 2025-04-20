@@ -1,19 +1,25 @@
 // Task API service for handling all task-related requests
 import { API_URL } from "../config";
 
-// Helper function to get auth headers
+// Get auth headers for API requests
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
+    'Authorization': `Bearer ${token}`
   };
 };
 
-// Fetch all tasks
-export const fetchTasks = async () => {
+// Fetch all tasks with optional filters
+export const fetchTasks = async (filters = {}) => {
   try {
-    const response = await fetch(`${API_URL}/tasks`, {
+    const queryParams = new URLSearchParams(filters).toString();
+    const url = `${API_URL}/tasks${queryParams ? `?${queryParams}` : ''}`;
+    
+    const response = await fetch(url, {
       headers: getAuthHeaders()
     });
     

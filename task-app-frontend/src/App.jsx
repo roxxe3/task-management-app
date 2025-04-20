@@ -39,19 +39,8 @@ const Dashboard = () => {
         setError(null);
         
         // Fetch categories first
-        let categoriesData = [];
-        try {
-          categoriesData = await fetchCategories();
-          console.log("Fetched categories:", categoriesData);
-        } catch (err) {
-          console.warn("Could not fetch categories, using defaults:", err);
-          // If fetching categories fails, use default mock categories
-          categoriesData = [
-            { id: "personal", name: "Personal", icon: "fa-user" },
-            { id: "work", name: "Work", icon: "fa-briefcase" },
-            { id: "shopping", name: "Shopping", icon: "fa-shopping-cart" }
-          ];
-        }
+        const categoriesData = await fetchCategories();
+        console.log("Fetched categories:", categoriesData);
         
         // Format categories with proper icons
         const formattedCategories = [
@@ -67,29 +56,24 @@ const Dashboard = () => {
         
         // Then fetch tasks
         const filters = activeCategory !== "All" ? { category: activeCategory } : {};
-        let tasksData = [];
-        try {
-          tasksData = await fetchTasks(filters);
-          console.log("Fetched tasks:", tasksData);
-          
-          // Enhance tasks with category data
-          const enhancedTasks = tasksData.map(task => {
-            const taskCategory = formattedCategories.find(c => c.id === task.category_id);
-            return {
-              ...task,
-              color: taskCategory?.color,
-              category_name: taskCategory?.name || task.category_name
-            };
-          });
-          
-          setTasks(enhancedTasks);
-        } catch (err) {
-          console.warn("Could not fetch tasks, using empty array:", err);
-          setTasks([]);
-        }
+        const tasksData = await fetchTasks(filters);
+        console.log("Fetched tasks:", tasksData);
+        
+        // Enhance tasks with category data
+        const enhancedTasks = tasksData.map(task => {
+          const taskCategory = formattedCategories.find(c => c.id === task.category_id);
+          return {
+            ...task,
+            color: taskCategory?.color,
+            category_name: taskCategory?.name || task.category_name
+          };
+        });
+        
+        setTasks(enhancedTasks);
       } catch (err) {
         console.error("Error loading data:", err);
         setError("Failed to load data. Please try again.");
+        setTasks([]);
       } finally {
         setIsLoading(false);
       }
@@ -157,22 +141,16 @@ const Dashboard = () => {
       );
       
       // Then update backend
-      const updatedTask = await updateTask(id, { 
-        completed: !taskToUpdate.completed 
-      });
-      
-      // If backend update fails, revert the UI change
-      if (!updatedTask) {
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === id ? { ...task, completed: task.completed } : task
-          )
-        );
-        throw new Error("Failed to update task");
-      }
+      await updateTask(id, { completed: !taskToUpdate.completed });
     } catch (err) {
       console.error("Error updating task:", err);
       setError("Failed to update task. Please try again.");
+      // Revert the UI change on error
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === id ? { ...task, completed: task.completed } : task
+        )
+      );
     }
   };
 
@@ -187,7 +165,6 @@ const Dashboard = () => {
       
       // Then delete from backend
       await deleteTask(id);
-      
     } catch (err) {
       console.error("Error deleting task:", err);
       setError("Failed to delete task. Please try again.");
@@ -234,9 +211,10 @@ const Dashboard = () => {
         )}
         
         <CategoryFilter 
-          categories={categories.length > 0 ? categories : DEFAULT_CATEGORIES} 
+          categories={categories} 
           activeCategory={activeCategory} 
-          setActiveCategory={setActiveCategory} 
+          setActiveCategory={setActiveCategory}
+          tasks={tasks}
         />
         
         {isLoading ? (
@@ -249,36 +227,16 @@ const Dashboard = () => {
             </h3>
           </div>
         ) : (
-          <>
-            {filteredTasks.length === 0 ? (
-              <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 text-center">
-                <div className="w-24 h-24 mx-auto mb-4 text-gray-500">
-                  <i className="fas fa-clipboard-list text-6xl"></i>
-                </div>
-                <h3 className="text-xl font-medium text-gray-300 mb-2">
-                  No tasks found
-                </h3>
-                <p className="text-gray-500">
-                  {searchQuery 
-                    ? "No tasks match your search query" 
-                    : activeCategory !== "All"
-                      ? "No tasks in this category"
-                      : "Click the + button to add your first task"}
-                </p>
-              </div>
-            ) : (
-              <TaskList 
-                filteredTasks={filteredTasks} 
-                toggleTaskCompletion={toggleTaskCompletion}
-                handleDeleteTask={handleDeleteTask}
-                priorityColors={PRIORITY_COLORS}
-                searchQuery={searchQuery}
-                onAddTask={() => setIsModalOpen(true)}
-                onReorderTasks={handleReorderTasks}
-                categories={categories.filter(cat => cat.id !== "All")}
-              />
-            )}
-          </>
+          <TaskList 
+            filteredTasks={filteredTasks} 
+            toggleTaskCompletion={toggleTaskCompletion}
+            handleDeleteTask={handleDeleteTask}
+            priorityColors={PRIORITY_COLORS}
+            searchQuery={searchQuery}
+            onAddTask={() => setIsModalOpen(true)}
+            onReorderTasks={handleReorderTasks}
+            categories={categories.filter(cat => cat.id !== "All")}
+          />
         )}
         
         {/* Add Task Button */}

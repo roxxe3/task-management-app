@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { updateTask } from "../services/taskService";
 
 const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors, onTaskUpdated, categories }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isQuickEditing, setIsQuickEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editedTask, setEditedTask] = useState({
     title: task.title,
     description: task.description || "",
     priority: task.priority,
     category_id: task.category_id
   });
+  const quickEditInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isQuickEditing && quickEditInputRef.current) {
+      quickEditInputRef.current.focus();
+    }
+  }, [isQuickEditing]);
 
   // Format date from API (expects ISO format or similar)
   const formatDate = (dateString) => {
@@ -60,6 +69,28 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
       }
     } catch (error) {
       console.error("Failed to update task:", error);
+    }
+  };
+
+  const handleQuickEditSubmit = async () => {
+    if (editedTask.title.trim() === "") return;
+    try {
+      const updatedTask = await updateTask(task.id, { title: editedTask.title });
+      setIsQuickEditing(false);
+      if (onTaskUpdated) {
+        onTaskUpdated(updatedTask);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleQuickEditSubmit();
+    } else if (e.key === 'Escape') {
+      setIsQuickEditing(false);
+      setEditedTask(prev => ({ ...prev, title: task.title }));
     }
   };
 
@@ -167,13 +198,13 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
 
   return (
     <div
-      className={`bg-[#2d2d2d] rounded-xl shadow-sm p-4 transition-all duration-200 ${
+      className={`bg-[#2d2d2d] rounded-xl shadow-sm p-4 transition-all duration-200 hover:bg-[#333333] ${
         task.completed ? "opacity-60" : ""
       }`}
     >
       <div className="flex items-center">
         <button
-          className="h-6 w-6 rounded-full border-2 border-indigo-500 flex items-center justify-center mr-4 cursor-pointer !rounded-button whitespace-nowrap"
+          className="h-6 w-6 rounded-full border-2 border-indigo-500 flex items-center justify-center mr-4 cursor-pointer hover:bg-indigo-500/10 transition-colors !rounded-button whitespace-nowrap"
           onClick={() => toggleTaskCompletion(task.id)}
         >
           {task.completed && (
@@ -184,11 +215,26 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
           )}
         </button>
         <div className="flex-1">
-          <h3
-            className={`font-medium ${task.completed ? "line-through text-gray-400" : ""}`}
-          >
-            {task.title}
-          </h3>
+          {isQuickEditing ? (
+            <input
+              ref={quickEditInputRef}
+              type="text"
+              value={editedTask.title}
+              onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+              onBlur={handleQuickEditSubmit}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-[#3d3d3d] text-white px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-[#caff17]"
+            />
+          ) : (
+            <h3
+              className={`font-medium cursor-pointer hover:text-[#caff17] ${
+                task.completed ? "line-through text-gray-400" : ""
+              }`}
+              onClick={() => !task.completed && setIsQuickEditing(true)}
+            >
+              {task.title}
+            </h3>
+          )}
           {task.description && (
             <p className="text-sm text-gray-400 mt-1">{task.description}</p>
           )}
@@ -230,13 +276,32 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
           >
             <i className="fas fa-edit"></i>
           </button>
-          <button
-            className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
-            onClick={() => handleDeleteTask(task.id)}
-            title="Delete task"
-          >
-            <i className="fas fa-trash-alt"></i>
-          </button>
+          {showDeleteConfirm ? (
+            <div className="flex items-center gap-1">
+              <button
+                className="text-red-500 hover:text-red-600 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
+                onClick={() => handleDeleteTask(task.id)}
+                title="Confirm delete"
+              >
+                <i className="fas fa-check"></i>
+              </button>
+              <button
+                className="text-gray-500 hover:text-gray-400 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
+                onClick={() => setShowDeleteConfirm(false)}
+                title="Cancel delete"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          ) : (
+            <button
+              className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
+              onClick={() => setShowDeleteConfirm(true)}
+              title="Delete task"
+            >
+              <i className="fas fa-trash-alt"></i>
+            </button>
+          )}
         </div>
       </div>
     </div>

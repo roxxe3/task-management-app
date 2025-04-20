@@ -2,7 +2,7 @@ import React from "react";
 import TaskItem from "./TaskItem";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, priorityColors, searchQuery, onReorderTasks, categories }) => {
+const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, priorityColors, searchQuery, onReorderTasks, categories, onAddTask }) => {
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     
@@ -11,6 +11,24 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
     items.splice(result.destination.index, 0, reorderedItem);
     
     onReorderTasks(items);
+  };
+
+  const getEmptyStateMessage = () => {
+    if (searchQuery) {
+      return {
+        icon: "fa-search",
+        title: "No matching tasks",
+        message: "Try adjusting your search terms",
+        showAdd: false
+      };
+    }
+    
+    return {
+      icon: "fa-clipboard-check",
+      title: "No tasks yet",
+      message: "Add your first task to get started",
+      showAdd: true
+    };
   };
 
   return (
@@ -60,24 +78,28 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
         </DragDropContext>
       ) : (
         <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 text-center">
-          <div className="w-24 h-24 mx-auto mb-4 text-gray-300">
-            <i className="fas fa-tasks text-6xl"></i>
+          <div className="w-32 h-32 mx-auto mb-6 relative">
+            <div className="absolute inset-0 bg-[#caff17] opacity-10 rounded-full animate-ping"></div>
+            <div className="relative flex items-center justify-center w-full h-full">
+              <i className={`fas ${getEmptyStateMessage().icon} text-7xl text-gray-400`}></i>
+            </div>
           </div>
-          <h3 className="text-xl font-medium text-gray-700 mb-2">
-            No tasks found
+          <h3 className="text-2xl font-medium text-white mb-3">
+            {getEmptyStateMessage().title}
           </h3>
-          <p className="text-gray-500 mb-6">
-            {searchQuery
-              ? "No tasks match your search criteria."
-              : "You don't have any tasks in this category yet."}
+          <p className="text-gray-400 mb-6 text-lg">
+            {getEmptyStateMessage().message}
           </p>
-          <button
-            className="text-white px-4 py-2 rounded-lg transition-colors cursor-pointer !rounded-button whitespace-nowrap"
-            style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-          >
-            <i className="fas fa-plus mr-2"></i>
-            Add New Task
-          </button>
+          {getEmptyStateMessage().showAdd && (
+            <button
+              onClick={onAddTask}
+              className="inline-flex items-center px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#caff17] focus:ring-offset-[#2d2d2d]"
+              style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+            >
+              <i className="fas fa-plus mr-2"></i>
+              Add Your First Task
+            </button>
+          )}
         </div>
       )}
     </div>
