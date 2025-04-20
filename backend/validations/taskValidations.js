@@ -36,7 +36,7 @@ const taskValidations = {
 
   updateTaskPosition: [
     param('id').isUUID().withMessage('Invalid task ID format'),
-    body('position').isInt({ min: 0 }).withMessage('Position must be a non-negative integer')
+    body('newPosition').isInt({ min: 0 }).withMessage('Position must be a non-negative integer')
   ]
 };
 

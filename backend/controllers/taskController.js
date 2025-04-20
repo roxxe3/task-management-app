@@ -251,6 +251,123 @@ class TaskController {
       res.status(500).json({ error: "Failed to delete task" });
     }
   }
+
+  // Update task position
+  async updateTaskPosition(req, res) {
+    try {
+      const { id } = req.params;
+      const { newPosition } = req.body;
+      
+      const authToken = req.headers.authorization?.split(" ")[1];
+      const supabaseAuth = await getSupabaseWithAuth(authToken);
+      
+      // First get the current task to verify ownership
+      const { data: currentTask, error: fetchError } = await supabaseAuth
+        .from("tasks")
+        .select("id")
+        .eq("id", id)
+        .eq("user_id", req.user.id)
+        .single();
+      
+      if (fetchError) {
+        console.error("Error fetching task:", fetchError);
+        return res.status(500).json({ 
+          error: "Database error fetching task", 
+          details: fetchError.message 
+        });
+      }
+      
+      if (!currentTask) {
+        return res.status(404).json({ error: "Task not found or you don't have permission to update it" });
+      }
+      
+      // Update the task's position
+      const { error: updateError } = await supabaseAuth
+        .from("tasks")
+        .update({ position: newPosition })
+        .eq("id", id)
+        .eq("user_id", req.user.id);
+      
+      if (updateError) {
+        console.error("Error updating task position:", updateError);
+        return res.status(500).json({ 
+          error: "Failed to update task position", 
+          details: updateError.message 
+        });
+      }
+      
+      res.json({ message: "Task position updated successfully" });
+    } catch (err) {
+      console.error("Unexpected error updating task position:", err);
+      res.status(500).json({ error: "Failed to update task position", details: err.message });
+    }
+  }
+
+  // Get unique categories
+  async getUniqueCategories(req, res) {
+    try {
+      const authToken = req.headers.authorization?.split(" ")[1];
+      const supabaseAuth = await getSupabaseWithAuth(authToken);
+      
+      const { data, error } = await supabaseAuth
+        .from("tasks")
+        .select("category_name, category_color, category_icon")
+        .eq("user_id", req.user.id)
+        .not("category_name", "is", null)
+        .order("category_name");
+      
+      if (error) {
+        console.error("Supabase error fetching categories:", error);
+        return res.status(500).json({ 
+          error: "Database error fetching categories", 
+          details: error.message,
+          code: error.code 
+        });
+      }
+      
+      // Return unique categories (removing duplicates)
+      const uniqueCategories = Array.from(new Map(
+        data.map(item => [item.category_name, item])
+      ).values());
+      
+      // If no categories found, return default categories for new users
+      if (uniqueCategories.length === 0) {
+        console.log("No categories found, returning default categories for user");
+        return res.json([
+          {
+            category_name: "Work",
+            category_color: "#0284c7",
+            category_icon: "fa-briefcase"
+          },
+          {
+            category_name: "Personal",
+            category_color: "#7e22ce",
+            category_icon: "fa-user"
+          },
+          {
+            category_name: "Shopping",
+            category_color: "#16a34a",
+            category_icon: "fa-shopping-cart"
+          },
+          {
+            category_name: "Health",
+            category_color: "#dc2626",
+            category_icon: "fa-heart"
+          },
+          {
+            category_name: "Education",
+            category_color: "#ea580c",
+            category_icon: "fa-book"
+          }
+        ]);
+      }
+      
+      res.json(uniqueCategories);
+    } catch (err) {
+      console.error("Unexpected error fetching categories:", err);
+      res.status(500).json({ error: "Failed to fetch categories", details: err.message });
+    }
+  }
 }
 
 module.exports = new TaskController(); 
