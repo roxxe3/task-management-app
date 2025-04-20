@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import TLogo from "../assets/T-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -80,9 +81,12 @@ const Login = () => {
       style={{ backgroundColor: "#1a1a1a" }}
     >
       <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          {isLoginMode ? "Login to Your Account" : "Create an Account"}
-        </h2>
+        <div className="flex flex-col items-center mb-8">
+          <img src={TLogo} alt="Task Manager Logo" className="h-16 w-16 mb-4" />
+          <h2 className="text-2xl font-bold text-white text-center">
+            {isLoginMode ? "Login to Your Account" : "Create an Account"}
+          </h2>
+        </div>
         
         {error && (
           <div className="bg-red-500 text-white p-3 rounded-lg mb-4 text-center">

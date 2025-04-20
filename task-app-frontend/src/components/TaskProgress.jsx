@@ -32,47 +32,93 @@ const TaskProgress = ({ tasks }) => {
     return "Amazing! You've completed all tasks! 🎉";
   };
 
+  const getProgressColor = (percentage) => {
+    if (percentage < 25) return "#ff6b6b";
+    if (percentage < 50) return "#ffd93d";
+    if (percentage < 75) return "#6bcb77";
+    return "#caff17";
+  };
+
+  const getGlowStyle = (color) => ({
+    filter: `
+      drop-shadow(0 0 2px ${color})
+      drop-shadow(0 0 4px ${color})
+    `
+  });
+
   return (
-    <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-4 sm:p-6">
+    <div className="bg-[#2d2d2d] rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
       <div className="flex flex-col sm:flex-row items-center">
         {/* Progress Circle */}
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 flex-shrink-0">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="#4b5563"
-              strokeWidth="3"
-              className="opacity-25"
-            />
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="#caff17"
-              strokeWidth="3"
-              strokeDasharray={`${animatedPercentage}, 100`}
-              strokeLinecap="round"
-              className="transition-all duration-200 ease-out"
-            />
-          </svg>
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 flex-shrink-0">
+          <div className="w-full h-full relative">
+            {/* Background Circle */}
+            <svg 
+              className="w-full h-full absolute top-0 left-0 transform -rotate-90" 
+              viewBox="0 0 36 36"
+            >
+              <circle
+                cx="18"
+                cy="18"
+                r="15.91549431"
+                fill="none"
+                stroke="#4b5563"
+                strokeWidth="3"
+                strokeDasharray="100, 100"
+                className="opacity-25"
+              />
+            </svg>
+            
+            {/* Progress Circle with Glow */}
+            <svg 
+              className="w-full h-full absolute top-0 left-0 transform -rotate-90" 
+              viewBox="0 0 36 36"
+              style={getGlowStyle(getProgressColor(stats.percentage))}
+            >
+              <circle
+                cx="18"
+                cy="18"
+                r="15.91549431"
+                fill="none"
+                stroke={getProgressColor(stats.percentage)}
+                strokeWidth="3"
+                strokeDasharray={`${animatedPercentage}, 100`}
+                strokeLinecap="round"
+                className="transition-all duration-700 ease-out"
+              />
+            </svg>
+          </div>
+          
+          {/* Percentage Display */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-white text-base sm:text-lg font-bold">
-              {Math.round(animatedPercentage)}%
-            </span>
+            <div className="text-center">
+              <span 
+                className="text-white text-2xl font-bold block"
+                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+              >
+                {Math.round(animatedPercentage)}%
+              </span>
+              <span className="text-xs text-gray-400 mt-1">Complete</span>
+            </div>
           </div>
         </div>
 
         {/* Progress Info */}
-        <div className="mt-4 sm:mt-0 sm:ml-6 lg:ml-8 text-center sm:text-left flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white">Progress</h3>
+        <div className="mt-6 sm:mt-0 sm:ml-8 lg:ml-10 text-center sm:text-left flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+            <h3 className="text-2xl font-bold text-white mb-2 sm:mb-0">Task Progress</h3>
+            <div className="flex items-center justify-center sm:justify-end space-x-2">
+              <span className="text-gray-400 text-sm">
+                {stats.completed}/{stats.total} Tasks
+              </span>
+            </div>
           </div>
-          <p className="text-gray-400 text-sm sm:text-base mb-2">
-            {stats.completed} of {stats.total} tasks completed
-          </p>
           <p 
-            className="text-sm sm:text-base transition-all duration-300" 
-            style={{ color: "#caff17" }}
+            className="text-base transition-all duration-500" 
+            style={{ 
+              color: getProgressColor(stats.percentage),
+              textShadow: `0 0 10px ${getProgressColor(stats.percentage)}40`
+            }}
           >
             {getMotivationalMessage(stats.percentage)}
           </p>
