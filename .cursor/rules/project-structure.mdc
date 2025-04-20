@@ -1,0 +1,40 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Task Management App Structure
+
+## Frontend Architecture
+The frontend is built with React and follows a component-based architecture:
+
+### Core Components
+- [App.jsx](mdc:task-app-frontend/src/App.jsx) - Main application component and routing
+- [Header.jsx](mdc:task-app-frontend/src/components/Header.jsx) - App header with logo and date
+- [TaskProgress.jsx](mdc:task-app-frontend/src/components/TaskProgress.jsx) - Circular progress indicator
+- [CategoryFilter.jsx](mdc:task-app-frontend/src/components/CategoryFilter.jsx) - Horizontal scrollable category filter
+
+### Design Patterns
+1. Component Organization:
+   - Components are kept focused and under 200 lines
+   - Each component has a single responsibility
+   - Shared logic is extracted into hooks
+
+2. Styling:
+   - Uses Tailwind CSS for styling
+   - Dark theme with accent color #caff17
+   - Mobile-first responsive design
+   - Custom animations and transitions
+
+3. State Management:
+   - React hooks for local state
+   - Props for component communication
+   - Context for global state (auth, themes)
+
+### Code Standards
+- No unnecessary comments
+- Clear component and function naming
+- Consistent file structure
+- Proper error handling
+- Mobile-responsive design
+- Performance optimizations

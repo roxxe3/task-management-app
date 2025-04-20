@@ -1,0 +1,53 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Code Quality Standards
+
+## General Guidelines
+1. Code Organization:
+   - Keep files under 200-300 lines
+   - Single responsibility principle
+   - Clear function and variable names
+   - No unnecessary comments
+
+2. Performance:
+   - Optimize re-renders
+   - Use proper React hooks
+   - Implement proper error boundaries
+   - Add loading states
+
+3. Error Handling:
+   - Graceful error fallbacks
+   - User-friendly error messages
+   - Proper error logging
+   - Recovery mechanisms
+
+## Component Structure
+Example from [TaskProgress.jsx](mdc:task-app-frontend/src/components/TaskProgress.jsx):
+1. Imports
+2. Component definition
+3. State and hooks
+4. Helper functions
+5. Return JSX
+6. Export
+
+## Best Practices
+1. State Management:
+   - Use local state when possible
+   - Lift state up when needed
+   - Avoid prop drilling
+   - Use context for global state
+
+2. Styling:
+   - Use Tailwind utility classes
+   - Group related styles
+   - Follow mobile-first approach
+   - Maintain consistent spacing
+
+3. Testing:
+   - Write unit tests for components
+   - Test error scenarios
+   - Test responsive behavior
+   - Test user interactions
