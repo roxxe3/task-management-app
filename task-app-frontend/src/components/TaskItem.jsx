@@ -204,113 +204,163 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, onTaskUpdated,
   }
 
   return (
-    <div
-      className={`bg-[#2d2d2d] rounded-xl shadow-sm p-4 transition-all duration-200 hover:bg-[#333333] ${
-        task.completed ? "opacity-60" : ""
-      }`}
-    >
-      <div className="flex items-center">
-        <button
-          className="h-6 w-6 rounded-full border-2 border-indigo-500 flex items-center justify-center mr-4 cursor-pointer hover:bg-indigo-500/10 transition-colors !rounded-button whitespace-nowrap"
-          onClick={() => toggleTaskCompletion(task.id)}
-        >
-          {task.completed && (
-            <i
-              className="fas fa-check text-xs"
-              style={{ color: "#caff17" }}
-            ></i>
-          )}
-        </button>
-        <div className="flex-1">
-          {isQuickEditing ? (
-            <input
-              ref={quickEditInputRef}
-              type="text"
-              value={editedTask.title}
-              onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-              onBlur={handleQuickEditSubmit}
-              onKeyDown={handleKeyDown}
-              className="w-full bg-[#3d3d3d] text-white px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-[#caff17]"
-            />
-          ) : (
-            <h3
-              className={`font-medium cursor-pointer hover:text-[#caff17] ${
-                task.completed ? "line-through text-gray-400" : ""
-              }`}
-              onClick={() => !task.completed && setIsQuickEditing(true)}
+    <div className="bg-[#2d2d2d] rounded-xl shadow-sm overflow-hidden">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center">
+          {/* Checkbox and Title */}
+          <div className="flex-1 flex items-start gap-3 min-w-0">
+            <button
+              onClick={() => toggleTaskCompletion(task.id)}
+              className="flex-shrink-0 mt-1 sm:mt-0"
             >
-              {task.title}
-            </h3>
-          )}
-          {task.description && (
-            <p className="text-sm text-gray-400 mt-1">{task.description}</p>
-          )}
-          <div className="flex items-center mt-2 text-sm text-gray-500">
-            <div className="flex items-center mr-4">
-              <i className="far fa-calendar mr-1"></i>
-              <span>Created: {formatDate(task.created_at)}</span>
-            </div>
-            <div className="flex items-center">
-              <span
-                className={`px-2 py-0.5 rounded-md text-xs font-medium mr-2 ${
-                  task.priority === 'high' 
-                    ? 'bg-red-500 text-white' 
-                    : task.priority === 'medium'
-                      ? 'bg-yellow-500 text-black'
-                      : 'bg-green-500 text-white'
-                }`}
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400'
+              }`}>
+                {task.completed && <i className="fas fa-check text-white text-xs"></i>}
+              </div>
+            </button>
+
+            {isQuickEditing ? (
+              <input
+                ref={quickEditInputRef}
+                type="text"
+                value={editedTask.title}
+                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                onBlur={handleQuickEditSubmit}
+                onKeyDown={handleKeyDown}
+                className="flex-1 bg-[#3d3d3d] text-white px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
+              />
+            ) : (
+              <div 
+                onClick={() => setIsQuickEditing(true)}
+                className="flex-1 cursor-pointer min-w-0"
               >
-                <i className="fas fa-flag mr-1"></i>
+                <h3 className={`text-lg font-medium truncate ${task.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
+                  {task.title}
+                </h3>
+                {task.description && (
+                  <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                    {task.description}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Task Metadata - Different layouts for mobile and desktop */}
+          <div className="hidden sm:flex items-center gap-4 ml-4">
+            {/* Desktop layout */}
+            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+              task.priority === 'high' ? 'bg-red-500 text-white' :
+              task.priority === 'medium' ? 'bg-yellow-500 text-black' :
+              'bg-green-500 text-white'
+            }`}>
+              <i className="fas fa-flag mr-2"></i>
+              {task.priority}
+            </span>
+            {taskCategory && (
+              <span
+                className="px-4 py-1.5 rounded-lg text-sm font-medium"
+                style={getCategoryStyle()}
+              >
+                <i className={`fas ${taskCategory.icon || 'fa-folder'} mr-2`}></i>
+                {taskCategory.name}
+              </span>
+            )}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+              >
+                <i className="fas fa-edit text-gray-400"></i>
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+              >
+                <i className="fas fa-trash text-gray-400"></i>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile layout */}
+          <div className="sm:hidden mt-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {taskCategory && (
+                <span
+                  className="px-3 py-1 rounded-full text-sm font-medium"
+                  style={getCategoryStyle()}
+                >
+                  <i className={`fas ${taskCategory.icon || 'fa-folder'} mr-2`}></i>
+                  {taskCategory.name}
+                </span>
+              )}
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                task.priority === 'high' ? 'bg-red-500 text-white' :
+                task.priority === 'medium' ? 'bg-yellow-500 text-black' :
+                'bg-green-500 text-white'
+              }`}>
+                <i className="fas fa-flag mr-2"></i>
                 {task.priority}
               </span>
             </div>
-          </div>
-        </div>
-        <div
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium mr-3 transition-all duration-200 ${
-            task.completed ? 'opacity-60' : ''
-          }`}
-          style={getCategoryStyle()}
-        >
-          <i className={`fas ${taskCategory?.icon || 'fa-folder'} mr-2`}></i>
-          {taskCategory?.name || "Uncategorized"}
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="text-gray-500 hover:text-blue-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
-            onClick={() => setIsEditing(true)}
-            title="Edit task"
-          >
-            <i className="fas fa-edit"></i>
-          </button>
-          {showDeleteConfirm ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 border-t pt-3">
               <button
-                className="text-red-500 hover:text-red-600 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
-                onClick={() => handleDeleteTask(task.id)}
-                title="Confirm delete"
+                onClick={() => setIsEditing(true)}
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
               >
-                <i className="fas fa-check"></i>
+                <i className="fas fa-edit text-gray-400"></i>
               </button>
               <button
-                className="text-gray-500 hover:text-gray-400 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
-                onClick={() => setShowDeleteConfirm(false)}
-                title="Cancel delete"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
               >
-                <i className="fas fa-times"></i>
+                <i className="fas fa-trash text-gray-400"></i>
               </button>
             </div>
-          ) : (
-            <button
-              className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded hover:bg-[#3d3d3d]"
-              onClick={() => setShowDeleteConfirm(true)}
-              title="Delete task"
-            >
-              <i className="fas fa-trash-alt"></i>
-            </button>
-          )}
+          </div>
+        </div>
+
+        {/* Created/Updated Date */}
+        <div className="mt-3 text-xs text-gray-400">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <i className="far fa-calendar mr-1"></i>
+              <span>Created: {formatDate(task.created_at)}</span>
+            </div>
+            {task.updated_at && task.updated_at !== task.created_at && (
+              <div className="flex items-center">
+                <i className="far fa-clock mr-1"></i>
+                <span>Updated: {formatDate(task.updated_at)}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="border-t border-gray-700 p-4 bg-[#262626]">
+          <p className="text-gray-300 mb-4">Are you sure you want to delete this task?</p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-4 py-2 text-sm text-gray-300 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                handleDeleteTask(task.id);
+                setShowDeleteConfirm(false);
+              }}
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -70,25 +70,7 @@ const Profile = () => {
 
             {/* User Info */}
             <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold mb-2">{user?.email}</h2>
-              <p className="text-gray-400">Member since {new Date(user?.created_at).toLocaleDateString()}</p>
-            </div>
-
-            {/* Account Settings */}
-            <div className="w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4 text-left">Account Settings</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-[#3d3d3d] rounded-lg">
-                  <div>
-                    <h4 className="font-medium">Email Notifications</h4>
-                    <p className="text-sm text-gray-400">Receive updates about your tasks</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#caff17]"></div>
-                  </label>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold">{user?.email}</h2>
             </div>
           </div>
         </div>

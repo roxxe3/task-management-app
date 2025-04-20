@@ -10,38 +10,42 @@ export const AuthProvider = ({ children }) => {
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
 
+  // Single authentication check on mount
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
     const token = localStorage.getItem("authToken");
     
-    if (token) {
+    const checkAuth = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`${API_URL}/auth/validate-token`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
         } else {
-          console.log("Token validation failed, clearing local storage");
+          // Clear invalid token
           localStorage.removeItem("authToken");
           setUser(null);
         }
       } catch (error) {
-        console.error("Error validating authentication:", error);
+        console.error("Auth check failed:", error);
         localStorage.removeItem("authToken");
         setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    
-    setIsLoading(false);
-  };
+    };
+
+    checkAuth();
+  }, []); // Only run on mount
 
   const login = async (email, password) => {
     try {
@@ -56,6 +60,11 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
       
+      if (response.status === 429) {
+        setError("Too many login attempts. Please wait a moment before trying again.");
+        return false;
+      }
+
       const data = await response.json();
       
       if (response.ok) {
@@ -81,7 +90,14 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
     }
   };
-  
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    setUser(null);
+    setError(null);
+    setIsLoading(false);
+  };
+
   const signup = async (email, password, name) => {
     try {
       setIsLoading(true);
@@ -113,12 +129,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setUser(null);
-    setError(null);
   };
 
   const confirmEmailVerification = async (token) => {
@@ -198,13 +208,13 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         error,
         setError,
-        needsEmailVerification,
-        verificationEmail,
         login,
         signup,
-        logout,
+        logout: handleLogout,
+        needsEmailVerification,
+        verificationEmail,
         confirmEmailVerification,
-        resendVerificationEmail,
+        resendVerificationEmail
       }}
     >
       {children}
@@ -219,3 +229,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;

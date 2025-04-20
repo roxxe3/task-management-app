@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
@@ -11,10 +11,21 @@ const Login = () => {
     password: "",
     name: "",
   });
+  
+  // Add debounce for form submission
+  const lastSubmitTime = useRef(0);
+  const SUBMIT_DELAY = 2000; // 2 seconds between attempts
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    
+    // Check if enough time has passed since last attempt
+    const now = Date.now();
+    if (now - lastSubmitTime.current < SUBMIT_DELAY) {
+      setError("Please wait a moment before trying again");
+      return;
+    }
     
     // Basic validation
     if (!formData.email || !formData.password) {
@@ -23,6 +34,7 @@ const Login = () => {
     }
     
     try {
+      lastSubmitTime.current = now;
       let success;
       
       if (isLoginMode) {

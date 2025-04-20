@@ -33,9 +33,10 @@ const TaskProgress = ({ tasks }) => {
   };
 
   return (
-    <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6 mb-8">
-      <div className="flex flex-col md:flex-row md:items-center">
-        <div className="relative w-24 h-24 md:w-28 md:h-28 mx-auto md:mx-0">
+    <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row items-center">
+        {/* Progress Circle */}
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 flex-shrink-0">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
             <path
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -55,20 +56,22 @@ const TaskProgress = ({ tasks }) => {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-white text-lg font-bold">
+            <span className="text-white text-base sm:text-lg font-bold">
               {Math.round(animatedPercentage)}%
             </span>
           </div>
         </div>
-        <div className="mt-4 md:mt-0 md:ml-8 text-center md:text-left flex-1">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h3 className="text-xl md:text-2xl font-semibold">Progress</h3>
+
+        {/* Progress Info */}
+        <div className="mt-4 sm:mt-0 sm:ml-6 lg:ml-8 text-center sm:text-left flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white">Progress</h3>
           </div>
-          <p className="text-gray-400 mb-2">
+          <p className="text-gray-400 text-sm sm:text-base mb-2">
             {stats.completed} of {stats.total} tasks completed
           </p>
           <p 
-            className="text-sm md:text-base transition-all duration-300" 
+            className="text-sm sm:text-base transition-all duration-300" 
             style={{ color: "#caff17" }}
           >
             {getMotivationalMessage(stats.percentage)}

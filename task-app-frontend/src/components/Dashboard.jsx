@@ -63,49 +63,51 @@ const Dashboard = () => {
       className="min-h-screen"
       style={{ backgroundColor: "#1a1a1a", color: "#ffffff" }}
     >
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Header />
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <TaskProgress tasks={tasks} />
-        
-        {error && (
-          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
-            {error}
-            <button 
-              className="float-right" 
-              onClick={clearError}
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-        )}
-        
-        <CategoryFilter 
-          categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
-
-        <div className="mt-8">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mb-6"
-          >
-            Add New Task
-          </button>
-
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+        <div className="space-y-4 sm:space-y-6">
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <TaskProgress tasks={tasks} />
+          
+          {error && (
+            <div className="bg-red-500 text-white p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+              {error}
+              <button 
+                className="float-right" 
+                onClick={clearError}
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
-          ) : (
-            <TaskList
-              tasks={filteredTasks}
-              onToggleComplete={toggleTaskCompletion}
-              onDeleteTask={deleteTaskById}
-              onReorderTasks={reorderTasks}
-            />
           )}
+          
+          <CategoryFilter 
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+
+          <div className="mt-4 sm:mt-6">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 sm:mb-6"
+            >
+              Add New Task
+            </button>
+
+            {isLoading ? (
+              <div className="text-center py-6 sm:py-8">
+                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+              </div>
+            ) : (
+              <TaskList
+                tasks={filteredTasks}
+                onToggleComplete={toggleTaskCompletion}
+                onDeleteTask={deleteTaskById}
+                onReorderTasks={reorderTasks}
+              />
+            )}
+          </div>
         </div>
 
         {isModalOpen && (

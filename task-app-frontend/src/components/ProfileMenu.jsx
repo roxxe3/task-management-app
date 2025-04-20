@@ -38,7 +38,7 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
         style={{ backgroundColor: "#caff17" }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <i className="fas fa-user text-white"></i>
+        <i className="fas fa-user text-black"></i>
       </div>
       {isOpen && (
         <div
@@ -54,27 +54,6 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
             <i className="fas fa-user-circle w-5"></i>
             <span>My Profile</span>
           </Link>
-          <button
-            id="settingsOption"
-            className="w-full px-4 py-3 text-left hover:bg-[#3d3d3d] flex items-center space-x-3 text-white"
-          >
-            <i className="fas fa-cog w-5"></i>
-            <span>Account Settings</span>
-          </button>
-          <button
-            id="themeOption"
-            className="w-full px-4 py-3 text-left hover:bg-[#3d3d3d] flex items-center space-x-3 text-white"
-          >
-            <i className="fas fa-palette w-5"></i>
-            <span>Theme Preferences</span>
-          </button>
-          <button
-            id="notificationsOption"
-            className="w-full px-4 py-3 text-left hover:bg-[#3d3d3d] flex items-center space-x-3 text-white"
-          >
-            <i className="fas fa-bell w-5"></i>
-            <span>Notifications</span>
-          </button>
           <div className="border-t border-gray-600 my-1"></div>
           <button
             id="logoutOption"
