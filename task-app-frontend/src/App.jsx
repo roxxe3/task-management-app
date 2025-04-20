@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Link } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import Login from "./components/Login";
+import EmailVerification from "./components/EmailVerification";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import TaskProgress from "./components/TaskProgress";
@@ -20,7 +21,9 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
-    category_id: "",
+    category_name: null,
+    category_color: null,
+    category_icon: null,
     priority: "medium",
     description: "",
   });
@@ -38,19 +41,14 @@ const Dashboard = () => {
         setIsLoading(true);
         setError(null);
         
-        // Fetch categories first
+        // Fetch categories from tasks endpoint (unique categories) 
         const categoriesData = await fetchCategories();
         console.log("Fetched categories:", categoriesData);
         
-        // Format categories with proper icons
+        // Format categories with proper icons and add "All" category
         const formattedCategories = [
-          DEFAULT_CATEGORIES[0],
-          ...categoriesData.map(category => ({
-            id: category.id,
-            name: category.name,
-            icon: CATEGORY_ICONS[category.name] || "fa-folder", 
-            color: category.color || "#2d2d2d"
-          }))
+          { category_name: "All", category_icon: "fa-th-large", category_color: "#2d2d2d" },
+          ...categoriesData
         ];
         setCategories(formattedCategories);
         
@@ -59,17 +57,7 @@ const Dashboard = () => {
         const tasksData = await fetchTasks(filters);
         console.log("Fetched tasks:", tasksData);
         
-        // Enhance tasks with category data
-        const enhancedTasks = tasksData.map(task => {
-          const taskCategory = formattedCategories.find(c => c.id === task.category_id);
-          return {
-            ...task,
-            color: taskCategory?.color,
-            category_name: taskCategory?.name || task.category_name
-          };
-        });
-        
-        setTasks(enhancedTasks);
+        setTasks(tasksData);
       } catch (err) {
         console.error("Error loading data:", err);
         setError("Failed to load data. Please try again.");
@@ -91,7 +79,9 @@ const Dashboard = () => {
       
       const taskData = {
         title: newTask.title,
-        category_id: newTask.category_id || null,
+        category_name: newTask.category_name,
+        category_color: newTask.category_color,
+        category_icon: newTask.category_icon,
         priority: newTask.priority,
         description: newTask.description || "",
         completed: false
@@ -100,20 +90,15 @@ const Dashboard = () => {
       console.log("Creating task:", taskData);
       const createdTask = await createTask(taskData);
       
-      // Enhance the created task with category data before adding to state
-      const taskCategory = categories.find(c => c.id === createdTask.category_id);
-      const enhancedTask = {
-        ...createdTask,
-        color: taskCategory?.color,
-        category_name: taskCategory?.name
-      };
-      
-      setTasks(prevTasks => [...prevTasks, enhancedTask]);
+      // Add the created task to the tasks state
+      setTasks(prevTasks => [...prevTasks, createdTask]);
       
       // Reset form
       setNewTask({
         title: "",
-        category_id: "",
+        category_name: null,
+        category_color: null,
+        category_icon: null,
         priority: "medium",
         description: "",
       });
@@ -181,7 +166,7 @@ const Dashboard = () => {
   // Filter tasks based on category and search query
   const filteredTasks = tasks.filter((task) => {
     const matchesCategory =
-      activeCategory === "All" || task.category_id === activeCategory;
+      activeCategory === "All" || task.category_name === activeCategory;
     const matchesSearch = task.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -235,7 +220,7 @@ const Dashboard = () => {
             searchQuery={searchQuery}
             onAddTask={() => setIsModalOpen(true)}
             onReorderTasks={handleReorderTasks}
-            categories={categories.filter(cat => cat.id !== "All")}
+            categories={categories.filter(cat => cat.category_name !== "All")}
           />
         )}
         
@@ -257,7 +242,7 @@ const Dashboard = () => {
           newTask={newTask}
           setNewTask={setNewTask}
           handleAddTask={handleAddTask}
-          categories={categories.filter(cat => cat.id !== "All")}
+          categories={categories.filter(cat => cat.category_name !== "All")}
           priorityColors={PRIORITY_COLORS}
           isLoading={isLoading}
         />
@@ -268,7 +253,11 @@ const Dashboard = () => {
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, needsEmailVerification } = useAuth();
+  
+  if (needsEmailVerification) {
+    return <Navigate to="/verify-email" replace />;
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -278,24 +267,138 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const App = () => {
-  const { isAuthenticated } = useAuth();
+  // Get auth context values
+  const { isAuthenticated, needsEmailVerification } = useAuth();
   
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
+        {/* Login route */}
+        <Route 
+          path="/login" 
+          element={
+            needsEmailVerification ? 
+              <Navigate to="/verify-email" replace /> :
+              isAuthenticated ? 
+                <Navigate to="/" replace /> : 
+                <Login />
+          } 
+        />
+        
+        {/* Email verification route */}
+        <Route 
+          path="/verify-email" 
+          element={
+            needsEmailVerification ? 
+              <EmailVerification /> : 
+              <Navigate to="/" replace />
+          } 
+        />
+        
+        {/* Profile route - protected */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Email confirmation route with token */}
+        <Route 
+          path="/confirm-email/:token" 
+          element={<EmailConfirmation />} 
+        />
+        
+        {/* Main dashboard route */}
+        <Route 
+          path="/" 
+          element={
+            needsEmailVerification ? 
+              <Navigate to="/verify-email" replace /> :
+              isAuthenticated ? 
+                <Dashboard /> : 
+                <Navigate to="/login" replace />
+          } 
+        />
       </Routes>
     </Router>
+  );
+};
+
+// Email confirmation component to handle verification links
+const EmailConfirmation = () => {
+  const { confirmEmailVerification, isLoading, error } = useAuth();
+  const [verified, setVerified] = useState(false);
+  const params = useParams();
+  
+  useEffect(() => {
+    const verifyEmail = async () => {
+      if (params.token) {
+        const success = await confirmEmailVerification(params.token);
+        setVerified(success);
+      }
+    };
+    
+    verifyEmail();
+  }, [params.token]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
+        <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+          <div className="w-20 h-20 mx-auto mb-4 text-gray-300 animate-spin">
+            <i className="fas fa-circle-notch text-6xl"></i>
+          </div>
+          <h3 className="text-xl font-medium text-white mb-2">
+            Verifying your email...
+          </h3>
+        </div>
+      </div>
+    );
+  }
+  
+  if (verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
+        <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-check text-green-500 text-3xl"></i>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Email Verified!</h2>
+          <p className="text-gray-400 mb-6">Your email has been successfully verified.</p>
+          <Link 
+            to="/" 
+            className="px-6 py-3 rounded-lg font-medium inline-block"
+            style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
+      <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <i className="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Verification Failed</h2>
+        <p className="text-gray-400 mb-6">
+          {error || "We couldn't verify your email. The verification link may have expired."}
+        </p>
+        <Link 
+          to="/login" 
+          className="px-6 py-3 rounded-lg font-medium inline-block"
+          style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+        >
+          Back to Login
+        </Link>
+      </div>
+    </div>
   );
 };
 

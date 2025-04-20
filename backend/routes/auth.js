@@ -65,9 +65,13 @@ router.post('/signup', async (req, res) => {
       name: data.user.user_metadata?.name || '',
     };
 
+    // Check if email confirmation is pending (no session token means email confirmation required)
+    const emailVerified = !!data.session?.access_token;
+
     res.status(201).json({
       user: userData,
-      token: data.session?.access_token || ''
+      token: data.session?.access_token || '',
+      emailVerified: emailVerified
     });
   } catch (error) {
     console.error('Server error during signup:', error);
@@ -154,6 +158,64 @@ router.post('/logout', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({ error: 'Server error during logout' });
+  }
+});
+
+/**
+ * @route   POST /api/auth/seed-categories
+ * @desc    Create default categories for a user (can be called after login if categories are missing)
+ * @access  Private (requires authentication)
+ */
+router.post('/seed-categories', authMiddleware, async (req, res) => {
+  try {
+    // Use the authenticated user's ID from the middleware
+    const userId = req.user.id;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    // Check if user already has categories
+    const { data: existingCategories, error: checkError } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+      
+    if (checkError) {
+      console.error('Error checking existing categories:', checkError);
+      return res.status(500).json({ error: 'Error checking existing categories' });
+    }
+    
+    // Only seed if no categories exist
+    if (existingCategories && existingCategories.length === 0) {
+      const result = await seedCategories(userId);
+      
+      if (result && result.error) {
+        return res.status(500).json({ 
+          error: 'Failed to create default categories',
+          details: result.error 
+        });
+      }
+      
+      return res.json({ 
+        success: true, 
+        message: 'Default categories created successfully' 
+      });
+    }
+    
+    // Categories already exist
+    return res.json({ 
+      success: true, 
+      message: 'User already has categories, none created' 
+    });
+    
+  } catch (error) {
+    console.error('Error seeding categories:', error);
+    res.status(500).json({ 
+      error: 'Failed to create default categories',
+      details: error.message 
+    });
   }
 });
 

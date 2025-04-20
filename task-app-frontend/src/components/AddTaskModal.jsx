@@ -42,7 +42,7 @@ const AddTaskModal = ({
     if (!newTask.title.trim()) {
       newErrors.title = "Title is required";
     }
-    if (!newTask.category_id) {
+    if (!newTask.category_name) {
       newErrors.category = "Please select a category";
     }
     setErrors(newErrors);
@@ -59,6 +59,32 @@ const AddTaskModal = ({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
       handleSubmit(e);
+    }
+  };
+
+  const handleCategoryChange = (categoryName) => {
+    if (!categoryName) {
+      setNewTask({
+        ...newTask,
+        category_name: null,
+        category_color: null,
+        category_icon: null
+      });
+      return;
+    }
+
+    const selectedCategory = categories.find(c => c.category_name === categoryName);
+    if (selectedCategory) {
+      setNewTask({
+        ...newTask,
+        category_name: selectedCategory.category_name,
+        category_color: selectedCategory.category_color,
+        category_icon: selectedCategory.category_icon
+      });
+    }
+
+    if (errors.category) {
+      setErrors({ ...errors, category: null });
     }
   };
 
@@ -114,13 +140,8 @@ const AddTaskModal = ({
             <div className="relative">
               <select
                 id="taskCategorySelect"
-                value={newTask.category_id}
-                onChange={(e) => {
-                  setNewTask({ ...newTask, category_id: e.target.value });
-                  if (errors.category) {
-                    setErrors({ ...errors, category: null });
-                  }
-                }}
+                value={newTask.category_name || ""}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className={`w-full px-3 py-2 border ${
                   errors.category ? 'border-red-500' : 'border-gray-600'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white`}
@@ -128,8 +149,8 @@ const AddTaskModal = ({
               >
                 <option value="">Select a category</option>
                 {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name || category.id}
+                  <option key={category.category_name} value={category.category_name}>
+                    {category.category_name}
                   </option>
                 ))}
               </select>

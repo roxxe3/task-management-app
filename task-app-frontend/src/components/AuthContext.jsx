@@ -8,15 +8,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
 
   useEffect(() => {
-    // Check if user is authenticated on app load
     const checkAuthStatus = async () => {
       const token = localStorage.getItem("authToken");
       
       if (token) {
         try {
-          // Validate token with backend
           const response = await fetch(`${API_URL}/auth/validate-token`, {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -28,7 +28,6 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             setIsAuthenticated(true);
           } else {
-            // Token is invalid or expired
             console.log("Token validation failed, clearing local storage");
             localStorage.removeItem("authToken");
           }
@@ -60,6 +59,14 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (response.ok) {
+        // Check for email verification status in response
+        if (data.emailVerified === false) {
+          setNeedsEmailVerification(true);
+          setVerificationEmail(email);
+          setError("Please verify your email before logging in.");
+          return false;
+        }
+        
         localStorage.setItem("authToken", data.token);
         setUser(data.user);
         setIsAuthenticated(true);
@@ -93,9 +100,13 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (response.ok) {
-        localStorage.setItem("authToken", data.token);
-        setUser(data.user);
-        setIsAuthenticated(true);
+        // IMPORTANT: Always set email verification needed after signup
+        // Don't store token or set authenticated until verification is complete
+        setNeedsEmailVerification(true);
+        setVerificationEmail(email);
+        
+        // Show success message
+        setError("Account created! Please check your email to verify your account.");
         return true;
       } else {
         setError(data.error || 'Registration failed');
@@ -110,10 +121,88 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to handle successful email verification
+  const confirmEmailVerification = async (token) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_URL}/auth/confirm-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Email verified successfully
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        setIsAuthenticated(true);
+        setNeedsEmailVerification(false);
+        setVerificationEmail("");
+        return true;
+      } else {
+        setError(data.error || 'Email verification failed');
+        return false;
+      }
+    } catch (error) {
+      console.error("Email verification error:", error);
+      setError("Failed to verify email. Please try again.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    if (!verificationEmail) {
+      setError("No email address available to send verification");
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        return true;
+      } else {
+        setError(data.error || 'Failed to resend verification email');
+        return false;
+      }
+    } catch (error) {
+      console.error("Error resending verification:", error);
+      setError("Failed to connect to the server. Please try again.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearVerificationState = () => {
+    setNeedsEmailVerification(false);
+    setVerificationEmail("");
+  };
+
   const logout = () => {
     localStorage.removeItem("authToken");
     setUser(null);
     setIsAuthenticated(false);
+    clearVerificationState();
   };
 
   return (
@@ -125,7 +214,12 @@ export const AuthProvider = ({ children }) => {
       logout, 
       isLoading,
       error,
-      setError
+      setError,
+      needsEmailVerification,
+      verificationEmail,
+      resendVerificationEmail,
+      clearVerificationState,
+      confirmEmailVerification
     }}>
       {children}
     </AuthContext.Provider>

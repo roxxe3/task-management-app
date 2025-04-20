@@ -3,7 +3,6 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const supabase = require("./supabaseClient");
 const tasksRouter = require("./routes/tasks");
-const categoriesRouter = require("./routes/categories");
 const authRouter = require("./routes/auth");
 
 // Load environment variables from .env file
@@ -23,7 +22,6 @@ app.use(express.json());
 
 // API Routes
 app.use("/api/tasks", tasksRouter);
-app.use("/api/categories", categoriesRouter);
 app.use("/api/auth", authRouter);
 
 // Simple endpoint to test server

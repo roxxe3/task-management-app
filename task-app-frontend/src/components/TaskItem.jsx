@@ -9,7 +9,9 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
     title: task.title,
     description: task.description || "",
     priority: task.priority,
-    category_id: task.category_id
+    category_name: task.category_name,
+    category_color: task.category_color,
+    category_icon: task.category_icon
   });
   const quickEditInputRef = useRef(null);
 
@@ -45,18 +47,40 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
   };
 
   // Get category style based on category data
-  const getCategoryStyle = (categoryId = task.category_id) => {
-    const category = categories?.find(c => c.id === categoryId);
-    if (!categoryId || !category) {
+  const getCategoryStyle = () => {
+    if (!task.category_name || !task.category_color) {
       return {
         backgroundColor: "#2d2d2d",
         color: "#ffffff"
       };
     }
     return {
-      backgroundColor: category.color || "#2d2d2d",
+      backgroundColor: task.category_color || "#2d2d2d",
       color: "#ffffff"
     };
+  };
+
+  const handleCategoryChange = (categoryName) => {
+    if (!categoryName) {
+      setEditedTask({
+        ...editedTask,
+        category_name: null,
+        category_color: null,
+        category_icon: null
+      });
+      return;
+    }
+
+    // Find the selected category from the categories list
+    const selectedCategory = categories.find(c => c.category_name === categoryName);
+    if (selectedCategory) {
+      setEditedTask({
+        ...editedTask,
+        category_name: selectedCategory.category_name,
+        category_color: selectedCategory.category_color,
+        category_icon: selectedCategory.category_icon
+      });
+    }
   };
 
   const handleEditSubmit = async (e) => {
@@ -118,14 +142,14 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
             </label>
             <div className="relative">
               <select
-                value={editedTask.category_id || ""}
-                onChange={(e) => setEditedTask({ ...editedTask, category_id: e.target.value })}
+                value={editedTask.category_name || ""}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
               >
                 <option value="">Select a category</option>
                 {categories?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
+                  <option key={category.category_name} value={category.category_name}>
+                    {category.category_name}
                   </option>
                 ))}
               </select>
@@ -265,7 +289,7 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
           }`}
           style={getCategoryStyle()}
         >
-          <i className={`fas ${categories?.find(c => c.id === task.category_id)?.icon || 'fa-folder'} mr-2`}></i>
+          <i className={`fas ${task.category_icon || 'fa-folder'} mr-2`}></i>
           {task.category_name || "Uncategorized"}
         </div>
         <div className="flex gap-2">

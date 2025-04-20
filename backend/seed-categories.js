@@ -38,7 +38,7 @@ const defaultCategories = [
 async function seedCategories(userId) {
   if (!userId) {
     console.error('User ID is required to seed categories');
-    return;
+    return { error: 'User ID is required' };
   }
 
   console.log(`Adding default categories for user ${userId}...`);
@@ -53,15 +53,19 @@ async function seedCategories(userId) {
     // Insert categories
     const { data, error } = await supabase
       .from('categories')
-      .insert(categoriesToInsert);
+      .insert(categoriesToInsert)
+      .select();
 
     if (error) {
       console.error('Error seeding categories:', error);
+      return { error: error.message };
     } else {
-      console.log('Categories added successfully!');
+      console.log('Categories added successfully!', data);
+      return { success: true, categories: data };
     }
   } catch (err) {
     console.error('Unexpected error:', err);
+    return { error: err.message };
   }
 }
 
@@ -78,7 +82,14 @@ if (require.main === module) {
 
   // Run the seed function
   seedCategories(userId)
-    .then(() => process.exit(0))
+    .then((result) => {
+      if (result.error) {
+        console.error('Error seeding categories:', result.error);
+        process.exit(1);
+      }
+      console.log('Seeding completed successfully!');
+      process.exit(0);
+    })
     .catch(err => {
       console.error('Error in seeding process:', err);
       process.exit(1);
