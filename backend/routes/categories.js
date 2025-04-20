@@ -4,32 +4,24 @@ const { supabase, getSupabaseWithAuth } = require("../supabaseClient");
 const authMiddleware = require("../middleware/auth");
 const { v4: uuidv4 } = require('uuid'); // Add UUID package
 
-// Sample mock data for development with proper UUID format
+// Mock data for development
 const mockCategories = [
   {
-    id: "personal-category-id-123",
-    name: "Personal",
-    color: "#2d2d2d",
-    icon: "fa-user",
-    user_id: "demo-user-id",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "work-category-id-123",
+    id: 1,
     name: "Work",
-    color: "#2d2d2d",
+    color: "#0284c7",
     icon: "fa-briefcase",
-    user_id: "demo-user-id",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "shopping-category-id-123",
-    name: "Shopping",
-    color: "#2d2d2d",
-    icon: "fa-shopping-cart",
-    user_id: "demo-user-id",
     created_at: new Date().toISOString()
   }
+];
+
+// Default categories fallback
+const defaultCategories = [
+  { name: 'Work', color: '#0284c7', icon: 'fa-briefcase' },
+  { name: 'Personal', color: '#7e22ce', icon: 'fa-user' },
+  { name: 'Shopping', color: '#16a34a', icon: 'fa-shopping-cart' },
+  { name: 'Health', color: '#dc2626', icon: 'fa-heart' },
+  { name: 'Education', color: '#ea580c', icon: 'fa-book' },
 ];
 
 // Use auth middleware for all routes
@@ -45,11 +37,14 @@ router.get("/", async (req, res) => {
     const { data, error } = await supabaseAuth
       .from("categories")
       .select("*")
-      .eq("user_id", req.user.id)
       .order("name", { ascending: true });
     
     if (error) {
       console.error("Supabase error fetching categories:", error);
+      if (error.code === '42P01') {
+        console.warn('Categories table missing, returning default categories');
+        return res.json(defaultCategories);
+      }
       return res.status(500).json({ 
         error: "Database error fetching categories", 
         details: error.message,
@@ -82,7 +77,6 @@ router.get("/:id", async (req, res) => {
       .from("categories")
       .select("*")
       .eq("id", id)
-      .eq("user_id", req.user.id)
       .single();
     
     if (error) {
@@ -96,7 +90,7 @@ router.get("/:id", async (req, res) => {
     
     // Check if category exists
     if (!data) {
-      return res.status(404).json({ error: "Category not found or you don't have permission to view it" });
+      return res.status(404).json({ error: "Category not found" });
     }
     
     res.json(data);
@@ -118,13 +112,12 @@ router.post("/", async (req, res) => {
     const categoryData = { 
       name, 
       color: color || "#2d2d2d",
-      icon: icon || "fa-folder",
-      user_id: req.user.id 
+      icon: icon || "fa-folder"
     };
     
     // Get authenticated Supabase client with user token
     const authToken = req.headers.authorization?.split(" ")[1];
-    const supabaseAuth = await getSupabaseWithAuth(authToken); // Add await here
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
     
     const { data, error } = await supabaseAuth
       .from("categories")
@@ -171,13 +164,12 @@ router.put("/:id", async (req, res) => {
     
     // Get authenticated Supabase client with user token
     const authToken = req.headers.authorization?.split(" ")[1];
-    const supabaseAuth = await getSupabaseWithAuth(authToken); // Add await here
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
     
     const { data, error } = await supabaseAuth
       .from("categories")
       .update(updateData)
       .eq("id", id)
-      .eq("user_id", req.user.id)
       .select();
       
     if (error) {
@@ -191,7 +183,7 @@ router.put("/:id", async (req, res) => {
     
     // Check if category exists
     if (!data || data.length === 0) {
-      return res.status(404).json({ error: "Category not found or you don't have permission to update it" });
+      return res.status(404).json({ error: "Category not found" });
     }
     
     res.json(data[0]);
@@ -208,7 +200,7 @@ router.delete("/:id", async (req, res) => {
     
     // Get authenticated Supabase client with user token
     const authToken = req.headers.authorization?.split(" ")[1];
-    const supabaseAuth = await getSupabaseWithAuth(authToken); // Add await here
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
     
     // First check if category is being used by any tasks
     const { data: tasks, error: taskError } = await supabaseAuth
@@ -216,48 +208,43 @@ router.delete("/:id", async (req, res) => {
       .select("id")
       .eq("category_id", id)
       .limit(1);
-    
+
     if (taskError) {
-      console.error("Supabase error checking category tasks:", taskError);
+      console.error("Error checking for tasks using category:", taskError);
       return res.status(500).json({ 
-        error: "Error checking if category is in use", 
+        error: "Failed to check for tasks using this category",
         details: taskError.message 
       });
     }
-    
-    // If tasks are using this category, return an error
+
+    // If tasks are using this category, prevent deletion
     if (tasks && tasks.length > 0) {
       return res.status(400).json({ 
-        error: "Cannot delete category: it is used by one or more tasks",
-        solution: "Either reassign or delete the tasks first" 
+        error: "Cannot delete category that has tasks assigned to it" 
       });
     }
-    
-    const { data, error } = await supabaseAuth
+
+    // If no tasks are using the category, proceed with deletion
+    const { error } = await supabaseAuth
       .from("categories")
       .delete()
-      .eq("id", id)
-      .eq("user_id", req.user.id)
-      .select();
-      
+      .eq("id", id);
+
     if (error) {
-      console.error("Supabase error deleting category:", error);
+      console.error("Error deleting category:", error);
       return res.status(500).json({ 
-        error: "Database error deleting category", 
-        details: error.message,
-        code: error.code 
+        error: "Failed to delete category",
+        details: error.message 
       });
     }
-    
-    // Check if category was found and deleted
-    if (!data || data.length === 0) {
-      return res.status(404).json({ error: "Category not found or you don't have permission to delete it" });
-    }
-    
-    res.json({ message: "Category deleted successfully" });
+
+    res.status(204).send();
   } catch (err) {
     console.error("Unexpected error deleting category:", err);
-    res.status(500).json({ error: "Server error deleting category", details: err.message });
+    res.status(500).json({ 
+      error: "Server error deleting category",
+      details: err.message 
+    });
   }
 });
 

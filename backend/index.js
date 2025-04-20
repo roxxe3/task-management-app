@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const supabase = require("./supabaseClient");
 const tasksRouter = require("./routes/tasks");
 const authRouter = require("./routes/auth");
+const categoriesRouter = require("./routes/categories");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json());
 // API Routes
 app.use("/api/tasks", tasksRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/categories", categoriesRouter);
 
 // Simple endpoint to test server
 app.get("/", (req, res) => {

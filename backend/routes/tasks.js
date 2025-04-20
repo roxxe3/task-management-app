@@ -2,50 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { supabase, getSupabaseWithAuth } = require("../supabaseClient");
 const authMiddleware = require("../middleware/auth");
-const { v4: uuidv4 } = require('uuid'); // Add UUID package
-
-// Sample mock data for development with proper UUID format
-const mockTasks = [
-  {
-    id: uuidv4(),
-    title: "Complete project proposal",
-    description: "Write up the full project proposal with timeline and budget",
-    priority: "high",
-    due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-    completed: false,
-    category_name: "Work",
-    category_color: "#2d2d2d",
-    category_icon: "fa-briefcase",
-    user_id: "demo-user-id",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: uuidv4(),
-    title: "Buy groceries",
-    description: "Milk, eggs, bread, fruit",
-    priority: "medium",
-    due_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
-    completed: true,
-    category_name: "Shopping",
-    category_color: "#2d2d2d",
-    category_icon: "fa-shopping-cart",
-    user_id: "demo-user-id",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: uuidv4(),
-    title: "Workout session",
-    description: "30 minutes cardio and strength training",
-    priority: "low",
-    due_date: new Date().toISOString(), // today
-    completed: false,
-    category_name: "Personal",
-    category_color: "#2d2d2d",
-    category_icon: "fa-user",
-    user_id: "demo-user-id",
-    created_at: new Date().toISOString()
-  }
-];
+const { v4: uuidv4 } = require('uuid');
 
 // Use auth middleware for all task routes
 router.use(authMiddleware);
@@ -53,7 +10,8 @@ router.use(authMiddleware);
 // GET /tasks - Fetch all tasks with optional filtering
 router.get("/", async (req, res) => {
   try {
-    const { status, category, priority, search } = req.query;
+    const { status, category_id, priority, search } = req.query;
+    
     // Get authenticated Supabase client with user token
     const authToken = req.headers.authorization?.split(" ")[1];
     const supabaseAuth = await getSupabaseWithAuth(authToken);
@@ -61,7 +19,15 @@ router.get("/", async (req, res) => {
     // Start building the query
     let query = supabaseAuth
       .from("tasks")
-      .select("*")
+      .select(`
+        *,
+        categories (
+          id,
+          name,
+          color,
+          icon
+        )
+      `)
       .eq("user_id", req.user.id);
     
     // Add filters if provided
@@ -71,8 +37,8 @@ router.get("/", async (req, res) => {
       query = query.eq('completed', false);
     }
     
-    if (category) {
-      query = query.eq('category_name', category);
+    if (category_id) {
+      query = query.eq('category_id', category_id);
     }
     
     if (priority) {
@@ -83,51 +49,26 @@ router.get("/", async (req, res) => {
       query = query.ilike('title', `%${search}%`);
     }
     
-    // Order by due date
-    query = query.order('due_date', { ascending: true });
+    // Order by created date
+    query = query.order('created_at', { ascending: false });
     
-    try {
-      const { data, error } = await query;
-      
-      if (error) {
-        throw error;
-      }
-      
-      // If no data or using mock client, return mock tasks
-      if (!data || data.length === 0) {
-        console.log("Returning mock task data");
-        
-        // Filter mock data based on query params
-        let filteredMockTasks = [...mockTasks];
-        
-        if (status === 'completed') {
-          filteredMockTasks = filteredMockTasks.filter(task => task.completed);
-        } else if (status === 'active') {
-          filteredMockTasks = filteredMockTasks.filter(task => !task.completed);
-        }
-        
-        if (category) {
-          filteredMockTasks = filteredMockTasks.filter(task => task.category_name === category);
-        }
-        
-        if (priority) {
-          filteredMockTasks = filteredMockTasks.filter(task => task.priority === priority);
-        }
-        
-        if (search) {
-          filteredMockTasks = filteredMockTasks.filter(task => 
-            task.title.toLowerCase().includes(search.toLowerCase())
-          );
-        }
-        
-        return res.json(filteredMockTasks);
-      }
-      
-      res.json(data);
-    } catch (err) {
-      console.log("Using fallback mock data due to query error:", err);
-      res.json(mockTasks);
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error("Supabase error fetching tasks:", error);
+      return res.status(500).json({ 
+        error: "Database error fetching tasks", 
+        details: error.message,
+        code: error.code 
+      });
     }
+    
+    // Return empty array if no data
+    if (!data) {
+      return res.json([]);
+    }
+    
+    res.json(data);
   } catch (err) {
     console.error("Error fetching tasks:", err);
     res.status(500).json({ error: "Failed to fetch tasks" });
@@ -145,18 +86,21 @@ router.get("/:id", async (req, res) => {
     
     const { data, error } = await supabaseAuth
       .from("tasks")
-      .select("*")
+      .select(`
+        *,
+        categories (
+          id,
+          name,
+          color,
+          icon
+        )
+      `)
       .eq("id", id)
       .eq("user_id", req.user.id)
       .single();
     
     if (error) {
       console.error("Supabase error fetching task:", error);
-      // Check if it's a mock task ID
-      const mockTask = mockTasks.find(task => task.id === id);
-      if (mockTask) {
-        return res.json(mockTask);
-      }
       return res.status(500).json({ 
         error: "Database error fetching task", 
         details: error.message,
@@ -182,61 +126,25 @@ router.post("/", async (req, res) => {
     const { 
       title, 
       description, 
-      priority, 
-      due_date, 
+      priority,
       completed,
-      category_name,
-      category_color,
-      category_icon
+      category_id,
+      position
     } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: "Title is required" });
     }
     
-    // Validate category if provided
-    if (category_name) {
-      try {
-        // Get authenticated Supabase client with user token
-        const authToken = req.headers.authorization?.split(" ")[1];
-        const supabaseAuth = await getSupabaseWithAuth(authToken);
-        
-        // Check if this is a valid category for this user
-        const { data: existingCategories, error: catError } = await supabaseAuth
-          .from("tasks")
-          .select("category_name")
-          .eq("user_id", req.user.id)
-          .eq("category_name", category_name)
-          .limit(1);
-          
-        if (catError) {
-          console.error("Error validating category:", catError);
-        } else if (!existingCategories || existingCategories.length === 0) {
-          // Check if the category exists in our default categories (for first-time use)
-          const isDefaultCategory = ["Work", "Personal", "Shopping", "Health", "Education"].includes(category_name);
-          
-          if (!isDefaultCategory) {
-            return res.status(400).json({ error: "Invalid category. Please use a category from the provided list." });
-          }
-          // If it's a default category, it's allowed to be used for the first time
-        }
-      } catch (catValidationErr) {
-        console.error("Error during category validation:", catValidationErr);
-        // Continue even if validation failed to avoid blocking task creation
-      }
-    }
-    
-    // Create the task with embedded category information
+    // Create the task
     const newTask = {
       id: uuidv4(),
       title,
       description: description || "",
       priority: priority || "medium",
-      due_date: due_date || new Date().toISOString(),
       completed: completed || false,
-      category_name: category_name || null,
-      category_color: category_color || "#2d2d2d",
-      category_icon: category_icon || "fa-folder",
+      category_id: category_id || null,
+      position: position || 0, // Default to 0 if not provided
       user_id: req.user.id,
       created_at: new Date().toISOString()
     };
@@ -245,27 +153,33 @@ router.post("/", async (req, res) => {
     const authToken = req.headers.authorization?.split(" ")[1];
     const supabaseAuth = await getSupabaseWithAuth(authToken);
     
-    try {
-      const { data, error } = await supabaseAuth
-        .from("tasks")
-        .insert([newTask])
-        .select();
-      
-      if (error) {
-        console.log("Using mock data due to database error:", error);
-        return res.status(201).json(newTask);
-      }
-      
-      if (!data || data.length === 0) {
-        console.log("No data returned, using mock task");
-        return res.status(201).json(newTask);
-      }
-      
-      res.status(201).json(data[0]);
-    } catch (err) {
-      console.log("Using mock data due to error:", err);
-      res.status(201).json(newTask);
+    const { data, error } = await supabaseAuth
+      .from("tasks")
+      .insert([newTask])
+      .select(`
+        *,
+        categories (
+          id,
+          name,
+          color,
+          icon
+        )
+      `);
+    
+    if (error) {
+      console.error("Supabase error creating task:", error);
+      return res.status(500).json({ 
+        error: "Database error creating task", 
+        details: error.message,
+        code: error.code 
+      });
     }
+    
+    if (!data || data.length === 0) {
+      return res.status(500).json({ error: "No data returned from database after task creation" });
+    }
+    
+    res.status(201).json(data[0]);
   } catch (err) {
     console.error("Error creating task:", err);
     res.status(500).json({ error: "Failed to create task" });
@@ -279,12 +193,9 @@ router.put("/:id", async (req, res) => {
     const { 
       title, 
       description, 
-      priority, 
-      due_date, 
-      completed, 
-      category_name,
-      category_color,
-      category_icon
+      priority,
+      completed,
+      category_id
     } = req.body;
     
     // Build update object with only provided fields
@@ -292,47 +203,12 @@ router.put("/:id", async (req, res) => {
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (priority !== undefined) updateData.priority = priority;
-    if (due_date !== undefined) updateData.due_date = due_date;
     if (completed !== undefined) updateData.completed = completed;
-    if (category_name !== undefined) updateData.category_name = category_name;
-    if (category_color !== undefined) updateData.category_color = category_color;
-    if (category_icon !== undefined) updateData.category_icon = category_icon;
+    if (category_id !== undefined) updateData.category_id = category_id;
     
     // Only proceed if there are fields to update
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: "No fields to update" });
-    }
-
-    // Validate category if provided
-    if (category_name !== undefined) {
-      try {
-        // Get authenticated Supabase client with user token
-        const authToken = req.headers.authorization?.split(" ")[1];
-        const supabaseAuth = await getSupabaseWithAuth(authToken);
-        
-        // Check if this is a valid category for this user
-        const { data: existingCategories, error: catError } = await supabaseAuth
-          .from("tasks")
-          .select("category_name")
-          .eq("user_id", req.user.id)
-          .eq("category_name", category_name)
-          .limit(1);
-          
-        if (catError) {
-          console.error("Error validating category:", catError);
-        } else if (!existingCategories || existingCategories.length === 0) {
-          // Check if the category exists in our default categories (for first-time use)
-          const isDefaultCategory = ["Work", "Personal", "Shopping", "Health", "Education"].includes(category_name);
-          
-          if (!isDefaultCategory) {
-            return res.status(400).json({ error: "Invalid category. Please use a category from the provided list." });
-          }
-          // If it's a default category, it's allowed to be used for the first time
-        }
-      } catch (catValidationErr) {
-        console.error("Error during category validation:", catValidationErr);
-        // Continue even if validation failed to avoid blocking task update
-      }
     }
     
     // Get authenticated Supabase client with user token
@@ -344,7 +220,15 @@ router.put("/:id", async (req, res) => {
       .update(updateData)
       .eq("id", id)
       .eq("user_id", req.user.id)
-      .select();
+      .select(`
+        *,
+        categories (
+          id,
+          name,
+          color,
+          icon
+        )
+      `);
     
     if (error) {
       console.error("Supabase error during task update:", error);
@@ -469,6 +353,62 @@ router.get("/categories/unique", async (req, res) => {
   } catch (err) {
     console.error("Unexpected error fetching categories:", err);
     res.status(500).json({ error: "Failed to fetch categories", details: err.message });
+  }
+});
+
+// PUT /tasks/:id/position - Update task position
+router.put("/:id/position", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPosition } = req.body;
+    
+    if (typeof newPosition !== 'number') {
+      return res.status(400).json({ error: "newPosition must be a number" });
+    }
+    
+    // Get authenticated Supabase client with user token
+    const authToken = req.headers.authorization?.split(" ")[1];
+    const supabaseAuth = await getSupabaseWithAuth(authToken);
+    
+    // First get the current task to verify ownership and get current position
+    const { data: currentTask, error: fetchError } = await supabaseAuth
+      .from("tasks")
+      .select("position")
+      .eq("id", id)
+      .eq("user_id", req.user.id)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching task:", fetchError);
+      return res.status(500).json({ 
+        error: "Database error fetching task", 
+        details: fetchError.message 
+      });
+    }
+    
+    if (!currentTask) {
+      return res.status(404).json({ error: "Task not found or you don't have permission to update it" });
+    }
+    
+    // Begin transaction to update positions
+    const { data, error } = await supabaseAuth.rpc('update_task_positions', {
+      p_task_id: id,
+      p_new_position: newPosition,
+      p_user_id: req.user.id
+    });
+    
+    if (error) {
+      console.error("Error updating task positions:", error);
+      return res.status(500).json({ 
+        error: "Failed to update task positions", 
+        details: error.message 
+      });
+    }
+    
+    res.json({ message: "Task position updated successfully" });
+  } catch (err) {
+    console.error("Unexpected error updating task position:", err);
+    res.status(500).json({ error: "Failed to update task position", details: err.message });
   }
 });
 

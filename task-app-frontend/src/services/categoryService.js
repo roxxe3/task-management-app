@@ -35,6 +35,29 @@ export const fetchCategories = async () => {
   }
 };
 
+// Fetch all categories from the categories endpoint and format for frontend
+export const fetchAllCategories = async () => {
+  try {
+    const response = await fetch(`${API_URL}/categories`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories');
+    }
+    const data = await response.json();
+    // Return the data as is, maintaining the original structure
+    return data.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      color: cat.color,
+      icon: cat.icon
+    }));
+  } catch (error) {
+    console.error('Error fetching all categories:', error);
+    throw error;
+  }
+};
+
 // Helper function to update all tasks with a specific category
 export const updateCategoryInTasks = async (oldCategoryName, newCategoryData) => {
   try {
@@ -57,9 +80,7 @@ export const updateCategoryInTasks = async (oldCategoryName, newCategoryData) =>
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          category_name: newCategoryData.name,
-          category_color: newCategoryData.color,
-          category_icon: newCategoryData.icon
+          category_id: newCategoryData.id
         })
       });
     });
@@ -73,12 +94,10 @@ export const updateCategoryInTasks = async (oldCategoryName, newCategoryData) =>
 };
 
 // Helper function to delete category from tasks
-export const removeCategoryFromTasks = async (categoryName) => {
+export const removeCategoryFromTasks = async (categoryId) => {
   try {
     // First fetch all tasks with the category
-    const filters = { category: categoryName };
-    const queryParams = new URLSearchParams(filters).toString();
-    const tasksResponse = await fetch(`${API_URL}/tasks?${queryParams}`, {
+    const tasksResponse = await fetch(`${API_URL}/tasks?category_id=${categoryId}`, {
       headers: getAuthHeaders()
     });
     
@@ -88,15 +107,13 @@ export const removeCategoryFromTasks = async (categoryName) => {
     
     const tasks = await tasksResponse.json();
     
-    // Set category fields to null for all tasks with this category
+    // Set category_id to null for all tasks with this category
     const updatePromises = tasks.map(task => {
       return fetch(`${API_URL}/tasks/${task.id}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          category_name: null,
-          category_color: null,
-          category_icon: null
+          category_id: null
         })
       });
     });

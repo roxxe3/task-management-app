@@ -9,11 +9,12 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
     title: task.title,
     description: task.description || "",
     priority: task.priority,
-    category_name: task.category_name,
-    category_color: task.category_color,
-    category_icon: task.category_icon
+    category_id: task.category_id
   });
   const quickEditInputRef = useRef(null);
+
+  // Get the category object for the current task
+  const taskCategory = categories?.find(c => c.id === task.category_id);
 
   useEffect(() => {
     if (isQuickEditing && quickEditInputRef.current) {
@@ -48,39 +49,23 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
 
   // Get category style based on category data
   const getCategoryStyle = () => {
-    if (!task.category_name || !task.category_color) {
+    if (!taskCategory) {
       return {
         backgroundColor: "#2d2d2d",
         color: "#ffffff"
       };
     }
     return {
-      backgroundColor: task.category_color || "#2d2d2d",
+      backgroundColor: taskCategory.color || "#2d2d2d",
       color: "#ffffff"
     };
   };
 
-  const handleCategoryChange = (categoryName) => {
-    if (!categoryName) {
-      setEditedTask({
-        ...editedTask,
-        category_name: null,
-        category_color: null,
-        category_icon: null
-      });
-      return;
-    }
-
-    // Find the selected category from the categories list
-    const selectedCategory = categories.find(c => c.category_name === categoryName);
-    if (selectedCategory) {
-      setEditedTask({
-        ...editedTask,
-        category_name: selectedCategory.category_name,
-        category_color: selectedCategory.category_color,
-        category_icon: selectedCategory.category_icon
-      });
-    }
+  const handleCategoryChange = (categoryId) => {
+    setEditedTask({
+      ...editedTask,
+      category_id: categoryId || null
+    });
   };
 
   const handleEditSubmit = async (e) => {
@@ -142,14 +127,14 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
             </label>
             <div className="relative">
               <select
-                value={editedTask.category_name || ""}
+                value={editedTask.category_id || ""}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
               >
                 <option value="">Select a category</option>
                 {categories?.map((category) => (
-                  <option key={category.category_name} value={category.category_name}>
-                    {category.category_name}
+                  <option key={category.id} value={category.id}>
+                    {category.name}
                   </option>
                 ))}
               </select>
@@ -289,8 +274,8 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
           }`}
           style={getCategoryStyle()}
         >
-          <i className={`fas ${task.category_icon || 'fa-folder'} mr-2`}></i>
-          {task.category_name || "Uncategorized"}
+          <i className={`fas ${taskCategory?.icon || 'fa-folder'} mr-2`}></i>
+          {taskCategory?.name || "Uncategorized"}
         </div>
         <div className="flex gap-2">
           <button

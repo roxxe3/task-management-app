@@ -134,3 +134,29 @@ export const fetchTask = async (id) => {
     throw error;
   }
 };
+
+// Update task positions in bulk
+export const updateTaskPositions = async (taskPositions) => {
+  try {
+    const response = await fetch(`${API_URL}/rest/v1/rpc/api_update_task_positions`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ positions: taskPositions }),
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error("Authentication error: Please log in again");
+      }
+      throw new Error("Failed to update task positions");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating task positions:", error);
+    throw error;
+  }
+};

@@ -12,7 +12,7 @@ import AddTaskModal from "./components/AddTaskModal";
 import Profile from "./components/Profile";
 // Import our API services
 import { fetchTasks, createTask, updateTask, deleteTask } from "./services/taskService";
-import { fetchCategories } from "./services/categoryService";
+import { fetchAllCategories } from "./services/categoryService";
 // Import config constants
 import { DEFAULT_CATEGORIES, PRIORITY_COLORS, CATEGORY_ICONS } from "./config";
 
@@ -21,9 +21,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
-    category_name: null,
-    category_color: null,
-    category_icon: null,
+    category_id: null,
     priority: "medium",
     description: "",
   });
@@ -34,41 +32,44 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch tasks and categories on component mount
+  // Get initial tasks
   useEffect(() => {
-    const loadData = async () => {
+    const loadTasks = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        
-        // Fetch categories from tasks endpoint (unique categories) 
-        const categoriesData = await fetchCategories();
-        console.log("Fetched categories:", categoriesData);
-        
-        // Format categories with proper icons and add "All" category
-        const formattedCategories = [
-          { category_name: "All", category_icon: "fa-th-large", category_color: "#2d2d2d" },
-          ...categoriesData
-        ];
-        setCategories(formattedCategories);
-        
-        // Then fetch tasks
-        const filters = activeCategory !== "All" ? { category: activeCategory } : {};
-        const tasksData = await fetchTasks(filters);
-        console.log("Fetched tasks:", tasksData);
-        
-        setTasks(tasksData);
+        const fetchedTasks = await fetchTasks();
+        // Sort tasks by position
+        const sortedTasks = fetchedTasks.sort((a, b) => (a.position || 0) - (b.position || 0));
+        setTasks(sortedTasks);
       } catch (err) {
-        console.error("Error loading data:", err);
-        setError("Failed to load data. Please try again.");
-        setTasks([]);
+        console.error("Error fetching tasks:", err);
+        setError("Failed to load tasks. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
+
+    loadTasks();
+  }, []);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await fetchAllCategories();
+        const formattedCategories = [
+          { id: "all", name: "All", icon: "fa-th-large", color: "#4a5568" },
+          ...categoriesData,
+        ];
+        setCategories(formattedCategories);
+      } catch (err) {
+        console.error("Error loading categories:", err);
+        setError("Failed to load categories. Please try again.");
+      }
+    };
     
-    loadData();
-  }, [activeCategory]);
+    loadCategories();
+  }, []);
 
   // Handle adding a new task
   const handleAddTask = async () => {
@@ -77,14 +78,16 @@ const Dashboard = () => {
     try {
       setIsLoading(true);
       
+      // Get the highest position value
+      const maxPosition = tasks.reduce((max, task) => 
+        Math.max(max, task.position || 0), 0);
+      
       const taskData = {
         title: newTask.title,
-        category_name: newTask.category_name,
-        category_color: newTask.category_color,
-        category_icon: newTask.category_icon,
+        category_id: newTask.category_id,
         priority: newTask.priority,
         description: newTask.description || "",
-        completed: false
+        position: maxPosition + 1, // Set position to be after the last task
       };
       
       console.log("Creating task:", taskData);
@@ -96,9 +99,7 @@ const Dashboard = () => {
       // Reset form
       setNewTask({
         title: "",
-        category_name: null,
-        category_color: null,
-        category_icon: null,
+        category_id: null,
         priority: "medium",
         description: "",
       });
@@ -166,7 +167,8 @@ const Dashboard = () => {
   // Filter tasks based on category and search query
   const filteredTasks = tasks.filter((task) => {
     const matchesCategory =
-      activeCategory === "All" || task.category_name === activeCategory;
+      activeCategory === "All" || 
+      categories.find(c => c.id === task.category_id)?.name === activeCategory;
     const matchesSearch = task.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -220,7 +222,7 @@ const Dashboard = () => {
             searchQuery={searchQuery}
             onAddTask={() => setIsModalOpen(true)}
             onReorderTasks={handleReorderTasks}
-            categories={categories.filter(cat => cat.category_name !== "All")}
+            categories={categories.filter(cat => cat.name !== "All")}
           />
         )}
         
@@ -242,7 +244,7 @@ const Dashboard = () => {
           newTask={newTask}
           setNewTask={setNewTask}
           handleAddTask={handleAddTask}
-          categories={categories.filter(cat => cat.category_name !== "All")}
+          categories={categories.filter(cat => cat.name !== "All")}
           priorityColors={PRIORITY_COLORS}
           isLoading={isLoading}
         />

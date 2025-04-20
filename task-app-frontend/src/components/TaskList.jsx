@@ -1,16 +1,31 @@
 import React from "react";
 import TaskItem from "./TaskItem";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { updateTaskPositions } from "../services/taskService";
 
 const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, priorityColors, searchQuery, onReorderTasks, categories, onAddTask }) => {
-  const handleDragEnd = (result) => {
+  const handleDragEnd = async (result) => {
     if (!result.destination) return;
     
     const items = Array.from(filteredTasks);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
+    // Update frontend state immediately for responsiveness
     onReorderTasks(items);
+    
+    // Save new positions to backend
+    try {
+      const taskPositions = items.map((task, index) => ({
+        id: task.id,
+        position: index + 1
+      }));
+      await updateTaskPositions(taskPositions);
+    } catch (error) {
+      console.error("Failed to save task positions:", error);
+      // Optionally revert the frontend state on error
+      // onReorderTasks(filteredTasks);
+    }
   };
 
   const getEmptyStateMessage = () => {
