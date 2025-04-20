@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import useProgressAnimation from "../hooks/useProgressAnimation";
 
 const TaskProgress = ({ tasks }) => {
-  const [animatedPercentage, setAnimatedPercentage] = useState(0);
   const [stats, setStats] = useState({
     completed: 0,
     total: 0,
     percentage: 0
   });
   
-  // Ref to store previous animation timer
-  const animationTimerRef = useRef(null);
+  const animatedPercentage = useProgressAnimation(stats.percentage);
 
   // Calculate stats
   useEffect(() => {
@@ -23,55 +22,6 @@ const TaskProgress = ({ tasks }) => {
       percentage: percentage
     });
   }, [tasks]);
-
-  // Animate percentage on change with improved smoothness
-  useEffect(() => {
-    // Clear any existing animation timer
-    if (animationTimerRef.current) {
-      clearInterval(animationTimerRef.current);
-    }
-
-    // Don't animate if there's no change or on initial render with same value
-    if (animatedPercentage === stats.percentage) {
-      return;
-    }
-    
-    // Define animation parameters
-    const startValue = animatedPercentage;
-    const endValue = stats.percentage;
-    const duration = 800; // slightly faster for better responsiveness
-    const totalSteps = 30; // fewer steps for smoother transition
-    const stepDuration = duration / totalSteps;
-    let currentStep = 0;
-    
-    // Use easeOutQuad easing function for smoother animation
-    const easeOutQuad = (t) => t * (2 - t);
-
-    // Start animation
-    animationTimerRef.current = setInterval(() => {
-      currentStep++;
-      
-      if (currentStep >= totalSteps) {
-        setAnimatedPercentage(endValue);
-        clearInterval(animationTimerRef.current);
-        return;
-      }
-      
-      // Calculate current progress with easing
-      const progress = easeOutQuad(currentStep / totalSteps);
-      // Calculate the current value
-      const currentValue = startValue + (endValue - startValue) * progress;
-      
-      setAnimatedPercentage(currentValue);
-    }, stepDuration);
-    
-    // Clean up animation timer on unmount or when dependencies change
-    return () => {
-      if (animationTimerRef.current) {
-        clearInterval(animationTimerRef.current);
-      }
-    };
-  }, [stats.percentage, animatedPercentage]);
 
   const getMotivationalMessage = (percentage) => {
     if (percentage === 0) return "Ready to start your day? Let's tackle these tasks!";

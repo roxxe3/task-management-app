@@ -1,7 +1,117 @@
 import React, { useState, useRef, useEffect } from "react";
 import { updateTask } from "../services/taskService";
 
-const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors, onTaskUpdated, categories }) => {
+// Priority button component
+const PriorityButton = ({ priority, selectedPriority, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 ${
+      selectedPriority === priority
+        ? priority === 'high'
+          ? 'bg-red-500 text-white'
+          : priority === 'medium'
+            ? 'bg-yellow-500 text-black'
+            : 'bg-green-500 text-white'
+        : "bg-[#3d3d3d] text-gray-300 hover:bg-[#4d4d4d]"
+    }`}
+  >
+    <i className={`fas fa-flag mr-2 ${selectedPriority === priority ? 'text-current' : 'text-gray-400'}`}></i>
+    {priority}
+  </button>
+);
+
+// Task edit form component
+const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categories }) => (
+  <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">
+          Title <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={editedTask.title}
+          onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
+          placeholder="Task title"
+          required
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">
+          Category <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <select
+            value={editedTask.category_id || ""}
+            onChange={(e) => setEditedTask({ ...editedTask, category_id: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
+          >
+            <option value="">Select a category</option>
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <i className="fas fa-chevron-down text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">
+          Priority
+        </label>
+        <div className="flex space-x-4">
+          {["high", "medium", "low"].map((priority) => (
+            <PriorityButton
+              key={priority}
+              priority={priority}
+              selectedPriority={editedTask.priority}
+              onClick={() => setEditedTask({ ...editedTask, priority })}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">
+          Description
+        </label>
+        <textarea
+          value={editedTask.description}
+          onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none bg-[#3d3d3d] text-white"
+          placeholder="Description (optional)"
+          rows="2"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-4 mt-6">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap"
+          style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+);
+
+const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, onTaskUpdated, categories }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isQuickEditing, setIsQuickEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -13,7 +123,6 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
   });
   const quickEditInputRef = useRef(null);
 
-  // Get the category object for the current task
   const taskCategory = categories?.find(c => c.id === task.category_id);
 
   useEffect(() => {
@@ -22,17 +131,12 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
     }
   }, [isQuickEditing]);
 
-  // Format date from API (expects ISO format or similar)
   const formatDate = (dateString) => {
     if (!dateString) return "No date";
     
     try {
       const date = new Date(dateString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
+      if (isNaN(date.getTime())) return dateString;
       
       return date.toLocaleDateString('en-US', { 
         month: 'short',
@@ -47,26 +151,10 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
     }
   };
 
-  // Get category style based on category data
-  const getCategoryStyle = () => {
-    if (!taskCategory) {
-      return {
-        backgroundColor: "#2d2d2d",
-        color: "#ffffff"
-      };
-    }
-    return {
-      backgroundColor: taskCategory.color || "#2d2d2d",
-      color: "#ffffff"
-    };
-  };
-
-  const handleCategoryChange = (categoryId) => {
-    setEditedTask({
-      ...editedTask,
-      category_id: categoryId || null
-    });
-  };
+  const getCategoryStyle = () => ({
+    backgroundColor: taskCategory?.color || "#2d2d2d",
+    color: "#ffffff"
+  });
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -105,103 +193,13 @@ const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, priorityColors
 
   if (isEditing) {
     return (
-      <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
-        <form onSubmit={handleEditSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={editedTask.title}
-              onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
-              placeholder="Task title"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <select
-                value={editedTask.category_id || ""}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
-              >
-                <option value="">Select a category</option>
-                {categories?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <i className="fas fa-chevron-down text-gray-400"></i>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Priority
-            </label>
-            <div className="flex space-x-4">
-              {["high", "medium", "low"].map((priority) => (
-                <button
-                  type="button"
-                  key={priority}
-                  onClick={() => setEditedTask({ ...editedTask, priority })}
-                  className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 ${
-                    editedTask.priority === priority
-                      ? priority === 'high'
-                        ? 'bg-red-500 text-white'
-                        : priority === 'medium'
-                          ? 'bg-yellow-500 text-black'
-                          : 'bg-green-500 text-white'
-                      : "bg-[#3d3d3d] text-gray-300 hover:bg-[#4d4d4d]"
-                  }`}
-                >
-                  <i className={`fas fa-flag mr-2 ${editedTask.priority === priority ? 'text-current' : 'text-gray-400'}`}></i>
-                  {priority}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Description
-            </label>
-            <textarea
-              value={editedTask.description}
-              onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none bg-[#3d3d3d] text-white"
-              placeholder="Description (optional)"
-              rows="2"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-4 mt-6">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap"
-              style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
+      <TaskEditForm
+        editedTask={editedTask}
+        setEditedTask={setEditedTask}
+        onSubmit={handleEditSubmit}
+        onCancel={() => setIsEditing(false)}
+        categories={categories}
+      />
     );
   }
 

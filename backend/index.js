@@ -1,29 +1,32 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const supabase = require("./supabaseClient");
+const config = require("./config/config");
+const setupSecurityMiddleware = require("./middleware/security");
 const tasksRouter = require("./routes/tasks");
 const authRouter = require("./routes/auth");
 const categoriesRouter = require("./routes/categories");
 
-// Load environment variables from .env file
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-  credentials: true,
-}));
-
-// Middleware to parse JSON
+// Middleware order is important!
+// 1. Parse JSON bodies first
 app.use(express.json());
 
+// 2. CORS configuration
+app.use(cors({
+  origin: config.corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+}));
+
+// 3. Security middleware (after parsing but before routes)
+setupSecurityMiddleware(app);
+
 // API Routes
-app.use("/api/tasks", tasksRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/tasks", tasksRouter);
 app.use("/api/categories", categoriesRouter);
 
 // Simple endpoint to test server
@@ -33,10 +36,35 @@ app.get("/", (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ error: "Server error" });
+  console.error("Error details:", {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method
+  });
+  
+  // Handle specific types of errors
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      error: "Validation error", 
+      details: err.message 
+    });
+  }
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ 
+      error: "Authentication error", 
+      details: err.message 
+    });
+  }
+  
+  // Default server error
+  res.status(500).json({ 
+    error: "Server error",
+    message: process.env.NODE_ENV === 'development' ? err.message : "An unexpected error occurred"
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT} with Supabase integration`);
+app.listen(config.port, () => {
+  console.log(`Server is running on port ${config.port} in ${process.env.NODE_ENV || 'development'} mode`);
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Link, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import Login from "./components/Login";
 import EmailVerification from "./components/EmailVerification";
@@ -255,159 +255,78 @@ const Dashboard = () => {
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, needsEmailVerification } = useAuth();
-  
-  if (needsEmailVerification) {
-    return <Navigate to="/verify-email" replace />;
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+
+  if (!user) {
+    return <Navigate to="/login" />;
   }
-  
+
   return children;
 };
 
-const App = () => {
-  // Get auth context values
-  const { isAuthenticated, needsEmailVerification } = useAuth();
-  
-  return (
-    <Router>
-      <Routes>
-        {/* Login route */}
-        <Route 
-          path="/login" 
-          element={
-            needsEmailVerification ? 
-              <Navigate to="/verify-email" replace /> :
-              isAuthenticated ? 
-                <Navigate to="/" replace /> : 
-                <Login />
-          } 
-        />
-        
-        {/* Email verification route */}
-        <Route 
-          path="/verify-email" 
-          element={
-            needsEmailVerification ? 
-              <EmailVerification /> : 
-              <Navigate to="/" replace />
-          } 
-        />
-        
-        {/* Profile route - protected */}
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Email confirmation route with token */}
-        <Route 
-          path="/confirm-email/:token" 
-          element={<EmailConfirmation />} 
-        />
-        
-        {/* Main dashboard route */}
-        <Route 
-          path="/" 
-          element={
-            needsEmailVerification ? 
-              <Navigate to="/verify-email" replace /> :
-              isAuthenticated ? 
-                <Dashboard /> : 
-                <Navigate to="/login" replace />
-          } 
-        />
-      </Routes>
-    </Router>
-  );
-};
-
-// Email confirmation component to handle verification links
+// Email confirmation component
 const EmailConfirmation = () => {
-  const { confirmEmailVerification, isLoading, error } = useAuth();
-  const [verified, setVerified] = useState(false);
-  const params = useParams();
-  
+  const { token } = useParams();
+  const navigate = useNavigate();
+
   useEffect(() => {
     const verifyEmail = async () => {
-      if (params.token) {
-        const success = await confirmEmailVerification(params.token);
-        setVerified(success);
+      try {
+        // Implement email verification logic here
+        navigate("/");
+      } catch (error) {
+        console.error("Error verifying email:", error);
       }
     };
-    
-    verifyEmail();
-  }, [params.token]);
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
-        <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-          <div className="w-20 h-20 mx-auto mb-4 text-gray-300 animate-spin">
-            <i className="fas fa-circle-notch text-6xl"></i>
-          </div>
-          <h3 className="text-xl font-medium text-white mb-2">
-            Verifying your email...
-          </h3>
-        </div>
-      </div>
-    );
-  }
-  
-  if (verified) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
-        <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-check text-green-500 text-3xl"></i>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Email Verified!</h2>
-          <p className="text-gray-400 mb-6">Your email has been successfully verified.</p>
-          <Link 
-            to="/" 
-            className="px-6 py-3 rounded-lg font-medium inline-block"
-            style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  
+
+    if (token) {
+      verifyEmail();
+    }
+  }, [token, navigate]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1a1a1a" }}>
-      <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-        <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-          <i className="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Verification Failed</h2>
-        <p className="text-gray-400 mb-6">
-          {error || "We couldn't verify your email. The verification link may have expired."}
-        </p>
-        <Link 
-          to="/login" 
-          className="px-6 py-3 rounded-lg font-medium inline-block"
-          style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-        >
-          Back to Login
-        </Link>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl mb-4">Verifying your email...</h1>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
       </div>
     </div>
   );
 };
 
-// Wrap the App component with AuthProvider
+// Main App component wrapped with AuthProvider
 const AppWithAuth = () => (
   <AuthProvider>
-    <App />
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/verify-email/:token" element={<EmailConfirmation />} />
+      </Routes>
+    </Router>
   </AuthProvider>
 );
 

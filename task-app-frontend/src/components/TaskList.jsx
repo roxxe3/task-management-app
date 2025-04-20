@@ -3,7 +3,55 @@ import TaskItem from "./TaskItem";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { updateTaskPositions } from "../services/taskService";
 
-const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, priorityColors, searchQuery, onReorderTasks, categories, onAddTask }) => {
+// Empty state component
+const EmptyState = ({ searchQuery, onAddTask }) => {
+  const { icon, title, message, showAdd } = searchQuery
+    ? {
+        icon: "fa-search",
+        title: "No matching tasks",
+        message: "Try adjusting your search terms",
+        showAdd: false
+      }
+    : {
+        icon: "fa-clipboard-check",
+        title: "No tasks yet",
+        message: "Add your first task to get started",
+        showAdd: true
+      };
+
+  return (
+    <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 text-center">
+      <div className="w-32 h-32 mx-auto mb-6 relative">
+        <div className="absolute inset-0 bg-[#caff17] opacity-10 rounded-full animate-ping"></div>
+        <div className="relative flex items-center justify-center w-full h-full">
+          <i className={`fas ${icon} text-7xl text-gray-400`}></i>
+        </div>
+      </div>
+      <h3 className="text-2xl font-medium text-white mb-3">{title}</h3>
+      <p className="text-gray-400 mb-6 text-lg">{message}</p>
+      {showAdd && (
+        <button
+          onClick={onAddTask}
+          className="inline-flex items-center px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#caff17] focus:ring-offset-[#2d2d2d]"
+          style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+        >
+          <i className="fas fa-plus mr-2"></i>
+          Add Your First Task
+        </button>
+      )}
+    </div>
+  );
+};
+
+const TaskList = ({ 
+  filteredTasks, 
+  toggleTaskCompletion, 
+  handleDeleteTask, 
+  searchQuery, 
+  onReorderTasks, 
+  categories, 
+  onAddTask 
+}) => {
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
     
@@ -16,11 +64,9 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
     
     // Save new positions to backend
     try {
-      // Only update tasks that need to be moved
       const startIdx = Math.min(result.source.index, result.destination.index);
       const endIdx = Math.max(result.source.index, result.destination.index);
       
-      // Get tasks that need position updates (only the ones in the affected range)
       const taskPositions = items
         .slice(startIdx, endIdx + 1)
         .map((task, idx) => ({
@@ -31,27 +77,7 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
       await updateTaskPositions(taskPositions);
     } catch (error) {
       console.error("Failed to save task positions:", error);
-      // Optionally revert the frontend state on error
-      // onReorderTasks(filteredTasks);
     }
-  };
-
-  const getEmptyStateMessage = () => {
-    if (searchQuery) {
-      return {
-        icon: "fa-search",
-        title: "No matching tasks",
-        message: "Try adjusting your search terms",
-        showAdd: false
-      };
-    }
-    
-    return {
-      icon: "fa-clipboard-check",
-      title: "No tasks yet",
-      message: "Add your first task to get started",
-      showAdd: true
-    };
   };
 
   return (
@@ -81,7 +107,6 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
                           task={task}
                           toggleTaskCompletion={toggleTaskCompletion}
                           handleDeleteTask={handleDeleteTask}
-                          priorityColors={priorityColors}
                           categories={categories}
                           onTaskUpdated={(updatedTask) => {
                             const newTasks = filteredTasks.map(t => 
@@ -100,30 +125,7 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
           </Droppable>
         </DragDropContext>
       ) : (
-        <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 text-center">
-          <div className="w-32 h-32 mx-auto mb-6 relative">
-            <div className="absolute inset-0 bg-[#caff17] opacity-10 rounded-full animate-ping"></div>
-            <div className="relative flex items-center justify-center w-full h-full">
-              <i className={`fas ${getEmptyStateMessage().icon} text-7xl text-gray-400`}></i>
-            </div>
-          </div>
-          <h3 className="text-2xl font-medium text-white mb-3">
-            {getEmptyStateMessage().title}
-          </h3>
-          <p className="text-gray-400 mb-6 text-lg">
-            {getEmptyStateMessage().message}
-          </p>
-          {getEmptyStateMessage().showAdd && (
-            <button
-              onClick={onAddTask}
-              className="inline-flex items-center px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#caff17] focus:ring-offset-[#2d2d2d]"
-              style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-            >
-              <i className="fas fa-plus mr-2"></i>
-              Add Your First Task
-            </button>
-          )}
-        </div>
+        <EmptyState searchQuery={searchQuery} onAddTask={onAddTask} />
       )}
     </div>
   );

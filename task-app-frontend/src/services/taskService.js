@@ -13,25 +13,24 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper function to handle API responses
+const handleResponse = async (response, errorMessage) => {
+  if (!response.ok) {
+    if (response.status === 401) {
+      console.error("Authentication error: Please log in again");
+    }
+    throw new Error(errorMessage);
+  }
+  return response.status === 204 ? null : response.json();
+};
+
 // Fetch all tasks with optional filters
 export const fetchTasks = async (filters = {}) => {
   try {
     const queryParams = new URLSearchParams(filters).toString();
     const url = `${API_URL}/tasks${queryParams ? `?${queryParams}` : ''}`;
-    
-    const response = await fetch(url, {
-      headers: getAuthHeaders()
-    });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to fetch tasks");
-    }
-    
-    const data = await response.json();
-    return data;
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    return handleResponse(response, "Failed to fetch tasks");
   } catch (error) {
     console.error("Error fetching tasks:", error);
     throw error;
@@ -46,16 +45,7 @@ export const createTask = async (taskData) => {
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to create task");
-    }
-    
-    const data = await response.json();
-    return data;
+    return handleResponse(response, "Failed to create task");
   } catch (error) {
     console.error("Error creating task:", error);
     throw error;
@@ -70,16 +60,7 @@ export const updateTask = async (id, taskData) => {
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to update task");
-    }
-    
-    const data = await response.json();
-    return data;
+    return handleResponse(response, "Failed to update task");
   } catch (error) {
     console.error("Error updating task:", error);
     throw error;
@@ -93,14 +74,7 @@ export const deleteTask = async (id) => {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to delete task");
-    }
-    
+    await handleResponse(response, "Failed to delete task");
     return true;
   } catch (error) {
     console.error("Error deleting task:", error);
@@ -138,24 +112,15 @@ export const fetchTask = async (id) => {
 // Update task positions in bulk
 export const updateTaskPositions = async (taskPositions) => {
   try {
-    // Update positions one by one
     const updatePromises = taskPositions.map(({ id, position }) => 
       fetch(`${API_URL}/tasks/${id}/position`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ newPosition: position }),
-      })
+      }).then(response => handleResponse(response, "Failed to update task position"))
     );
     
-    // Wait for all updates to complete
-    const results = await Promise.all(updatePromises);
-    
-    // Check if any request failed
-    const failedRequests = results.filter(response => !response.ok);
-    if (failedRequests.length > 0) {
-      throw new Error("Failed to update some task positions");
-    }
-    
+    await Promise.all(updatePromises);
     return true;
   } catch (error) {
     console.error("Error updating task positions:", error);

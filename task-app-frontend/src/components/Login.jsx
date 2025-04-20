@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 const Login = () => {
+  const navigate = useNavigate();
   const { login, signup, isLoading, error, setError } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({ 
@@ -24,24 +26,26 @@ const Login = () => {
       let success;
       
       if (isLoginMode) {
-        // Handle login
         success = await login(formData.email, formData.password);
+        if (success) {
+          navigate("/");
+        }
       } else {
-        // Handle signup - additional validation
         if (formData.password.length < 6) {
           setError("Password must be at least 6 characters");
           return;
         }
         
         success = await signup(formData.email, formData.password, formData.name);
-      }
-      
-      if (!success) {
-        // Error is set by the login/signup functions
-        console.log("Authentication failed");
+        if (success) {
+          // Stay on the login page after successful signup
+          setIsLoginMode(true);
+          setFormData({ email: formData.email, password: "", name: "" });
+        }
       }
     } catch (err) {
       console.error("Form submission error:", err);
+      setError("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -55,6 +59,7 @@ const Login = () => {
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setError(null);
+    setFormData({ email: "", password: "", name: "" });
   };
 
   return (
