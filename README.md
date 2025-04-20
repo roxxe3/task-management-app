@@ -31,18 +31,11 @@ A modern, responsive task management application built with React and Node.js, f
 
 ### Environment Variables
 
-1. Frontend Environment Setup (task-app-frontend/.env):
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-2. Backend Environment Setup (backend/.env):
+Backend Environment Setup (backend/.env):
 ```env
 SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_KEY=your_supabase_service_key
+SUPABASE_KEY=your_supabase_key
 PORT=3000
-NODE_ENV=development
 ```
 
 ### Installation

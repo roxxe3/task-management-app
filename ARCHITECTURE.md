@@ -16,6 +16,12 @@
   - Row Level Security
   - Real-time capabilities
   - Automatic API generation
+  - Environment Configuration:
+    ```env
+    SUPABASE_URL=your_supabase_url
+    SUPABASE_KEY=your_supabase_key
+    PORT=3000
+    ```
 
 ## Database Schema
 
