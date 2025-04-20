@@ -10,7 +10,6 @@ const TaskProgress = ({ tasks }) => {
   
   const animatedPercentage = useProgressAnimation(stats.percentage);
 
-  // Calculate stats
   useEffect(() => {
     const completedCount = tasks.filter(task => task.completed).length;
     const totalCount = tasks.length;
@@ -49,10 +48,8 @@ const TaskProgress = ({ tasks }) => {
   return (
     <div className="bg-[#2d2d2d] rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
       <div className="flex flex-col sm:flex-row items-center">
-        {/* Progress Circle */}
         <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 flex-shrink-0">
           <div className="w-full h-full relative">
-            {/* Background Circle */}
             <svg 
               className="w-full h-full absolute top-0 left-0 transform -rotate-90" 
               viewBox="0 0 36 36"
@@ -69,7 +66,6 @@ const TaskProgress = ({ tasks }) => {
               />
             </svg>
             
-            {/* Progress Circle with Glow */}
             <svg 
               className="w-full h-full absolute top-0 left-0 transform -rotate-90" 
               viewBox="0 0 36 36"
@@ -89,7 +85,6 @@ const TaskProgress = ({ tasks }) => {
             </svg>
           </div>
           
-          {/* Percentage Display */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <span 
@@ -103,7 +98,6 @@ const TaskProgress = ({ tasks }) => {
           </div>
         </div>
 
-        {/* Progress Info */}
         <div className="mt-6 sm:mt-0 sm:ml-8 lg:ml-10 text-center sm:text-left flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
             <h3 className="text-2xl font-bold text-white mb-2 sm:mb-0">Task Progress</h3>
