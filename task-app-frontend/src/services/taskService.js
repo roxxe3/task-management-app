@@ -138,20 +138,22 @@ export const fetchTask = async (id) => {
 // Update task positions in bulk
 export const updateTaskPositions = async (taskPositions) => {
   try {
-    const response = await fetch(`${API_URL}/rest/v1/rpc/api_update_task_positions`, {
-      method: 'POST',
-      headers: {
-        ...getAuthHeaders(),
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ positions: taskPositions }),
-    });
+    // Update positions one by one
+    const updatePromises = taskPositions.map(({ id, position }) => 
+      fetch(`${API_URL}/tasks/${id}/position`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ newPosition: position }),
+      })
+    );
     
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to update task positions");
+    // Wait for all updates to complete
+    const results = await Promise.all(updatePromises);
+    
+    // Check if any request failed
+    const failedRequests = results.filter(response => !response.ok);
+    if (failedRequests.length > 0) {
+      throw new Error("Failed to update some task positions");
     }
     
     return true;

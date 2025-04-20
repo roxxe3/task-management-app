@@ -16,10 +16,18 @@ const TaskList = ({ filteredTasks, toggleTaskCompletion, handleDeleteTask, prior
     
     // Save new positions to backend
     try {
-      const taskPositions = items.map((task, index) => ({
-        id: task.id,
-        position: index + 1
-      }));
+      // Only update tasks that need to be moved
+      const startIdx = Math.min(result.source.index, result.destination.index);
+      const endIdx = Math.max(result.source.index, result.destination.index);
+      
+      // Get tasks that need position updates (only the ones in the affected range)
+      const taskPositions = items
+        .slice(startIdx, endIdx + 1)
+        .map((task, idx) => ({
+          id: task.id,
+          position: startIdx + idx
+        }));
+      
       await updateTaskPositions(taskPositions);
     } catch (error) {
       console.error("Failed to save task positions:", error);
