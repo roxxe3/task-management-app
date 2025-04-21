@@ -1,8 +1,6 @@
-import React, { useRef } from "react";
+import React from "react";
 
 const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = [] }) => {
-  const scrollContainerRef = useRef(null);
-
   const getCategoryTaskCount = (categoryName) => {
     if (categoryName === "All") {
       return tasks.length;
@@ -11,44 +9,18 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = 
     return tasks.filter(task => task.category_id === category?.id).length;
   };
 
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 200;
-      const newScrollPosition = scrollContainerRef.current.scrollLeft + (direction === 'right' ? scrollAmount : -scrollAmount);
-      scrollContainerRef.current.scrollTo({
-        left: newScrollPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   const handleCategoryChange = (categoryName) => {
     console.log("Category filter changing to:", categoryName);
     onCategoryChange(categoryName || "All");
   };
 
   return (
-    <div className="mb-8 relative md:px-16">
+    <div className="mb-8 relative">
       <h3 className="text-lg font-medium text-white mb-2 ml-4">Categories</h3>
       
-      {/* Left Arrow - Hidden on mobile */}
-      <button
-        onClick={() => scroll('left')}
-        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-[#2d2d2d] hover:bg-[#3d3d3d] text-gray-400 hover:text-white w-8 h-8 rounded-full shadow-lg transition-all duration-200 items-center justify-center hover:scale-110"
-      >
-        <i className="fas fa-chevron-left"></i>
-      </button>
-
-      {/* Categories Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide md:overflow-x-hidden scroll-smooth"
-        style={{
-          maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
-        }}
-      >
-        <div className="flex space-x-4 py-4 px-4">
+      {/* Categories Container - No more scrollable and no gradient mask */}
+      <div className="px-4">
+        <div className="flex flex-wrap gap-3 py-4">
           {categories.map((category) => {
             const taskCount = getCategoryTaskCount(category.name);
             return (
@@ -80,27 +52,8 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = 
           })}
         </div>
       </div>
-
-      {/* Right Arrow - Hidden on mobile */}
-      <button
-        onClick={() => scroll('right')}
-        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-[#2d2d2d] hover:bg-[#3d3d3d] text-gray-400 hover:text-white w-8 h-8 rounded-full shadow-lg transition-all duration-200 items-center justify-center hover:scale-110"
-      >
-        <i className="fas fa-chevron-right"></i>
-      </button>
     </div>
   );
 };
 
 export default CategoryFilter;
-
-/* Add this to your index.css file */
-/*
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-*/

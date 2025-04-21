@@ -21,7 +21,6 @@ const defaultCategories = [
   { name: 'Personal', color: '#7e22ce', icon: 'fa-user' },
   { name: 'Shopping', color: '#16a34a', icon: 'fa-shopping-cart' },
   { name: 'Health', color: '#dc2626', icon: 'fa-heart' },
-  { name: 'Education', color: '#ea580c', icon: 'fa-book' },
 ];
 
 // Use auth middleware for all routes

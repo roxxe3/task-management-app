@@ -191,10 +191,13 @@ const Dashboard = () => {
           <AddTaskModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onSubmit={handleAddTask}
-            task={newTask}
-            setTask={setNewTask}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            newTask={newTask}
+            setNewTask={setNewTask}
+            handleAddTask={handleAddTask}
             categories={categories.filter(c => c.id !== "all")}
+            isLoading={isLoading}
           />
         )}
       </div>
@@ -202,4 +205,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
