@@ -17,9 +17,18 @@ const getAuthHeaders = () => {
 const handleResponse = async (response, errorMessage) => {
   if (!response.ok) {
     if (response.status === 401) {
-      console.error("Authentication error: Please log in again");
+      // Store auth error for special handling upstream
+      throw new Error('Authentication error: Please log in again');
     }
-    throw new Error(errorMessage);
+    
+    // Try to get detailed error from response if available
+    try {
+      const errorData = await response.json();
+      throw new Error(errorData.error || errorData.message || errorMessage);
+    } catch (e) {
+      // If parsing fails, use the generic message
+      throw new Error(errorMessage);
+    }
   }
   return response.status === 204 ? null : response.json();
 };
@@ -32,7 +41,6 @@ export const fetchTasks = async (filters = {}) => {
     const response = await fetch(url, { headers: getAuthHeaders() });
     return handleResponse(response, "Failed to fetch tasks");
   } catch (error) {
-    console.error("Error fetching tasks:", error);
     throw error;
   }
 };
@@ -47,7 +55,6 @@ export const createTask = async (taskData) => {
     });
     return handleResponse(response, "Failed to create task");
   } catch (error) {
-    console.error("Error creating task:", error);
     throw error;
   }
 };
@@ -62,7 +69,6 @@ export const updateTask = async (id, taskData) => {
     });
     return handleResponse(response, "Failed to update task");
   } catch (error) {
-    console.error("Error updating task:", error);
     throw error;
   }
 };
@@ -77,7 +83,6 @@ export const deleteTask = async (id) => {
     await handleResponse(response, "Failed to delete task");
     return true;
   } catch (error) {
-    console.error("Error deleting task:", error);
     throw error;
   }
 };
@@ -93,18 +98,8 @@ export const fetchTask = async (id) => {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       headers: getAuthHeaders()
     });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error("Authentication error: Please log in again");
-      }
-      throw new Error("Failed to fetch task");
-    }
-    
-    const data = await response.json();
-    return data;
+    return handleResponse(response, "Failed to fetch task");
   } catch (error) {
-    console.error("Error fetching task:", error);
     throw error;
   }
 };
@@ -123,7 +118,6 @@ export const updateTaskPositions = async (taskPositions) => {
     await Promise.all(updatePromises);
     return true;
   } catch (error) {
-    console.error("Error updating task positions:", error);
     throw error;
   }
 };

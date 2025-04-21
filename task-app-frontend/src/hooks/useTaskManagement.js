@@ -22,20 +22,17 @@ export const useTaskManagement = () => {
 
   const loadTasks = useCallback(async (currentFilters = {}) => {
     try {
-      console.log("Loading tasks with filters:", currentFilters);
       setIsLoading(true);
+      setError(null);
       
       const fetchedTasks = await fetchTasks(currentFilters);
-      console.log("Fetched tasks:", fetchedTasks);
       
       const sortedTasks = Array.isArray(fetchedTasks) 
         ? fetchedTasks.sort((a, b) => (a.position || 0) - (b.position || 0))
         : [];
         
-      console.log("Sorted tasks:", sortedTasks);
       setTasks(sortedTasks);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
       setError("Failed to load tasks. Please try again.");
       // Initialize with empty array on error
       setTasks([]);
@@ -46,7 +43,6 @@ export const useTaskManagement = () => {
 
   // Load initial tasks on component mount
   useEffect(() => {
-    console.log("Initial tasks load");
     loadTasks({});
   }, [loadTasks]);
 
@@ -54,7 +50,6 @@ export const useTaskManagement = () => {
   useEffect(() => {
     // Only reload if filters have actually changed
     if (!areFiltersEqual(prevFiltersRef.current, filters)) {
-      console.log("Filters changed, reloading tasks:", filters);
       prevFiltersRef.current = { ...filters };
       loadTasks(filters);
     }
@@ -64,19 +59,16 @@ export const useTaskManagement = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        console.log("Loading categories");
+        setError(null);
         const categoriesData = await fetchAllCategories();
-        console.log("Fetched categories:", categoriesData);
         
         const formattedCategories = [
           { id: "all", name: "All", icon: "fa-th-large", color: "#4a5568" },
           ...categoriesData,
         ];
         
-        console.log("Formatted categories:", formattedCategories);
         setCategories(formattedCategories);
       } catch (err) {
-        console.error("Error loading categories:", err);
         setError("Failed to load categories. Please try again.");
         // Initialize with default All category on error
         setCategories([{ id: "all", name: "All", icon: "fa-th-large", color: "#4a5568" }]);
@@ -87,8 +79,6 @@ export const useTaskManagement = () => {
   }, []);
 
   const updateFilters = useCallback((newFilters) => {
-    console.log("Updating filters:", newFilters);
-    
     // Create a clean copy of current filters
     setFilters(prevFilters => {
       const updatedFilters = { ...prevFilters };
@@ -107,7 +97,6 @@ export const useTaskManagement = () => {
         }
       });
       
-      console.log("Final filters after cleanup:", updatedFilters);
       return updatedFilters;
     });
   }, []);
@@ -117,6 +106,7 @@ export const useTaskManagement = () => {
     
     try {
       setIsLoading(true);
+      setError(null);
       
       const maxPosition = tasks.reduce((max, task) => 
         Math.max(max, task.position || 0), 0);
@@ -126,14 +116,11 @@ export const useTaskManagement = () => {
         position: maxPosition + 1,
       };
       
-      console.log("Creating task:", taskData);
       const createdTask = await createTask(taskData);
-      console.log("Created task:", createdTask);
       
       setTasks(prevTasks => [...prevTasks, createdTask]);
       return createdTask;
     } catch (err) {
-      console.error("Error adding task:", err);
       setError("Failed to add task. Please try again.");
       throw err;
     } finally {
@@ -142,20 +129,20 @@ export const useTaskManagement = () => {
   };
 
   const toggleTaskCompletion = async (id) => {
+    const taskToUpdate = tasks.find(task => task.id === id);
+    if (!taskToUpdate) return;
+    
+    // Optimistic UI update
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
+    
     try {
-      const taskToUpdate = tasks.find(task => task.id === id);
-      if (!taskToUpdate) return;
-      
-      console.log("Toggling task completion:", id);
-      setTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === id ? { ...task, completed: !task.completed } : task
-        )
-      );
-      
       await updateTask(id, { completed: !taskToUpdate.completed });
     } catch (err) {
-      console.error("Error updating task:", err);
+      // Revert on error
       setError("Failed to update task. Please try again.");
       setTasks(prevTasks => 
         prevTasks.map(task => 
@@ -166,22 +153,29 @@ export const useTaskManagement = () => {
   };
 
   const deleteTaskById = async (id) => {
+    const taskToDelete = tasks.find(task => task.id === id);
+    if (!taskToDelete) return;
+    
+    // Optimistic UI update
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+    
     try {
-      const taskToDelete = tasks.find(task => task.id === id);
-      if (!taskToDelete) return;
-      
-      console.log("Deleting task:", id);
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
       await deleteTask(id);
     } catch (err) {
-      console.error("Error deleting task:", err);
+      // Revert on error
       setError("Failed to delete task. Please try again.");
-      setTasks(prevTasks => [...prevTasks]);
+      // Restore the tasks array to include the "deleted" task
+      setTasks(prevTasks => {
+        // Check if the task is already in the array (to avoid duplicates)
+        if (!prevTasks.some(task => task.id === id)) {
+          return [...prevTasks, taskToDelete];
+        }
+        return prevTasks;
+      });
     }
   };
 
   const reorderTasks = (reorderedTasks) => {
-    console.log("Reordering tasks:", reorderedTasks);
     setTasks(reorderedTasks);
   };
 

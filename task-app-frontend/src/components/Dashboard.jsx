@@ -34,14 +34,6 @@ const Dashboard = () => {
     description: "",
   });
 
-  console.log("Dashboard rendering with:", {
-    tasksCount: tasks.length,
-    categories,
-    activeCategory,
-    activeStatus,
-    filters
-  });
-
   // Update filters when search, category or status changes
   useEffect(() => {
     const newFilters = {};
@@ -66,7 +58,6 @@ const Dashboard = () => {
       newFilters.status = null;
     }
     
-    console.log("Setting new filters:", newFilters);
     updateFilters(newFilters);
   }, [searchQuery, activeCategory, activeStatus, categories, updateFilters]);
 
@@ -111,15 +102,12 @@ const Dashboard = () => {
   };
 
   const filteredTasks = getFilteredTasks();
-  console.log("Filtered tasks:", filteredTasks.length, "out of", tasks.length);
   
   const handleStatusChange = (status) => {
-    console.log("Status changed to:", status);
     setActiveStatus(status);
   };
   
   const handleCategoryChange = (category) => {
-    console.log("Category changed to:", category);
     setActiveCategory(category);
   };
 
@@ -135,43 +123,70 @@ const Dashboard = () => {
           <TaskProgress tasks={filteredTasks} />
           
           {error && (
-            <div className="bg-red-500 text-white p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+            <div 
+              className="bg-red-500 text-white p-3 sm:p-4 rounded-lg mb-4 sm:mb-6"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
               <button 
-                className="float-right" 
+                className="float-right hover:bg-red-600 p-1 rounded-full transition-colors" 
                 onClick={clearError}
+                aria-label="Close error message"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
           )}
           
-          <div className="flex flex-col space-y-4">
-            
-            <CategoryFilter 
-              categories={categories}
-              activeCategory={activeCategory}
-              onCategoryChange={handleCategoryChange}
-              tasks={tasks}
-            />
-            <StatusFilter 
-              activeStatus={activeStatus}
-              onStatusChange={handleStatusChange}
-            />
+          <div className="bg-[#212121] rounded-xl p-2 sm:p-3 mb-4 sm:mb-6">
+            <div className="flex flex-col space-y-2 sm:space-y-4">
+              <CategoryFilter 
+                categories={categories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+                tasks={tasks}
+              />
+              
+              <div className="border-t border-[#2a2a2a] my-1 sm:my-2"></div>
+              
+              <StatusFilter 
+                activeStatus={activeStatus}
+                onStatusChange={handleStatusChange}
+              />
+            </div>
           </div>
 
           <div className="mt-4 sm:mt-6">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="w-full sm:w-auto bg-[#caff17] hover:bg-[#b5e615] text-black px-4 py-2 rounded-lg mb-4 sm:mb-6 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg mb-4 sm:mb-6 flex items-center justify-center gap-1 sm:gap-2 cursor-pointer transition-all duration-200 text-sm sm:text-base"
+              style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffff";
+                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#caff17";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+              aria-label="Add new task"
             >
               <i className="fas fa-plus"></i>
               Add New Task
             </button>
 
             {isLoading ? (
-              <div className="text-center py-6 sm:py-8">
-                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-[#caff17] mx-auto"></div>
+              <div 
+                className="text-center py-6 sm:py-8"
+                aria-live="polite"
+                role="status"
+              >
+                <div 
+                  className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-[#caff17] mx-auto"
+                  aria-hidden="true"
+                ></div>
+                <span className="sr-only">Loading tasks...</span>
               </div>
             ) : (
               <TaskList

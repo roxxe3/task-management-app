@@ -106,12 +106,24 @@ const EmailVerification = () => {
             <button
               onClick={handleResendEmail}
               disabled={isLoading || countdown > 0}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                 isLoading || countdown > 0
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-[#caff17] hover:bg-[#deff72]"
+                  : "cursor-pointer"
               }`}
-              style={isLoading || countdown > 0 ? {} : { color: "#0d0d0d" }}
+              style={isLoading || countdown > 0 ? {} : { backgroundColor: "#caff17", color: "#0d0d0d" }}
+              onMouseOver={(e) => {
+                if (!(isLoading || countdown > 0)) {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!(isLoading || countdown > 0)) {
+                  e.currentTarget.style.backgroundColor = "#caff17";
+                  e.currentTarget.style.boxShadow = "none";
+                }
+              }}
             >
               {isLoading ? (
                 <>

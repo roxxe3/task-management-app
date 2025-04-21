@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-Development: http://localhost:3000/api
+Development: http://localhost:5000/api
 Production: [Your production API URL]
 ```
 
@@ -222,7 +222,7 @@ supabase
 
 ### Creating a Task with cURL
 ```bash
-curl -X POST http://localhost:3000/api/tasks \
+curl -X POST http://localhost:5000/api/tasks \
   -H "Authorization: Bearer <your_jwt_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -235,6 +235,6 @@ curl -X POST http://localhost:3000/api/tasks \
 
 ### Filtering Tasks with cURL
 ```bash
-curl http://localhost:3000/api/tasks?priority=high&status=active \
+curl http://localhost:5000/api/tasks?priority=high&status=active \
   -H "Authorization: Bearer <your_jwt_token>"
 ``` 

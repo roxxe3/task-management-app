@@ -34,8 +34,16 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
     <div className="relative">
       <div
         id="profileButton"
-        className="h-12 w-12 rounded-full flex items-center justify-center cursor-pointer"
+        className="h-12 w-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200"
         style={{ backgroundColor: "#caff17" }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.backgroundColor = "#ffffff";
+          e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.backgroundColor = "#caff17";
+          e.currentTarget.style.boxShadow = "none";
+        }}
         onClick={() => setIsOpen(!isOpen)}
       >
         <i className="fas fa-user text-black"></i>

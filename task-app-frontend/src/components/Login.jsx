@@ -146,8 +146,19 @@ const Login = () => {
           
           <button
             type="submit"
-            className="w-full py-2 px-4 rounded-lg font-medium !rounded-button whitespace-nowrap"
-            style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+            className="w-full py-2 px-4 rounded-lg font-medium !rounded-button whitespace-nowrap transition-all duration-200 cursor-pointer"
+            style={{ 
+              backgroundColor: "#caff17", 
+              color: "#0d0d0d"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = "#ffffff";
+              e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = "#caff17";
+              e.currentTarget.style.boxShadow = "none";
+            }}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -164,7 +175,7 @@ const Login = () => {
             <button
               type="button"
               onClick={toggleMode}
-              className="text-sm text-gray-400 hover:text-white"
+              className="text-sm text-gray-400 hover:text-white transition-colors cursor-pointer hover:underline"
               disabled={isLoading}
             >
               {isLoginMode 

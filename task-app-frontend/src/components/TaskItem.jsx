@@ -6,7 +6,7 @@ const PriorityButton = ({ priority, selectedPriority, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 ${
+    className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 cursor-pointer ${
       selectedPriority === priority
         ? priority === 'high'
           ? 'bg-red-500 text-white'
@@ -95,14 +95,22 @@ const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categorie
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap"
+          className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap"
+          className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap transition-all duration-200 cursor-pointer"
           style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = "#ffffff";
+            e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = "#caff17";
+            e.currentTarget.style.boxShadow = "none";
+          }}
         >
           Save Changes
         </button>
@@ -215,16 +223,23 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
         <div className="flex flex-col sm:flex-row sm:items-center">
           {/* Checkbox and Title */}
           <div className="flex-1 flex items-start gap-3 min-w-0">
-            <button
-              onClick={() => toggleTaskCompletion(task.id)}
-              className="flex-shrink-0 mt-1 sm:mt-0"
-            >
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400'
-              }`}>
-                {task.completed && <i className="fas fa-check text-white text-xs"></i>}
-              </div>
-            </button>
+            <div className="flex-shrink-0 flex items-center h-full pt-1.5 sm:pt-0">
+              <button
+                onClick={() => toggleTaskCompletion(task.id)}
+                className="cursor-pointer flex items-center justify-center"
+                aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
+              >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                  task.completed 
+                    ? 'bg-green-500 border-green-500 shadow-sm shadow-green-500/30' 
+                    : 'border-gray-400 hover:border-gray-300'
+                }`}>
+                  {task.completed && (
+                    <i className="fas fa-check text-white text-[10px]"></i>
+                  )}
+                </div>
+              </button>
+            </div>
 
             {isQuickEditing ? (
               <input
@@ -276,13 +291,13 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
               >
                 <i className="fas fa-edit text-gray-400"></i>
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
               >
                 <i className="fas fa-trash text-gray-400"></i>
               </button>
@@ -313,13 +328,13 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
             <div className="flex items-center gap-2 border-t pt-3">
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
               >
                 <i className="fas fa-edit text-gray-400"></i>
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
               >
                 <i className="fas fa-trash text-gray-400"></i>
               </button>
@@ -351,7 +366,7 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
           <div className="flex justify-end space-x-3">
             <button
               onClick={() => setShowDeleteConfirm(false)}
-              className="px-4 py-2 text-sm text-gray-300 hover:bg-[#3d3d3d] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-gray-300 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -360,7 +375,7 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
                 handleDeleteTask(task.id);
                 setShowDeleteConfirm(false);
               }}
-              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
             >
               Delete
             </button>
