@@ -147,16 +147,16 @@ const Dashboard = () => {
           )}
           
           <div className="flex flex-col space-y-4">
-            <StatusFilter 
-              activeStatus={activeStatus}
-              onStatusChange={handleStatusChange}
-            />
             
             <CategoryFilter 
               categories={categories}
               activeCategory={activeCategory}
               onCategoryChange={handleCategoryChange}
               tasks={tasks}
+            />
+            <StatusFilter 
+              activeStatus={activeStatus}
+              onStatusChange={handleStatusChange}
             />
           </div>
 

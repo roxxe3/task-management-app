@@ -90,25 +90,27 @@ export const useTaskManagement = () => {
     console.log("Updating filters:", newFilters);
     
     // Create a clean copy of current filters
-    const updatedFilters = { ...filters };
-    
-    // Update with new filters or remove keys if they're empty/"all"/null
-    Object.keys(newFilters).forEach(key => {
-      const value = newFilters[key];
+    setFilters(prevFilters => {
+      const updatedFilters = { ...prevFilters };
       
-      // Remove keys with empty values, "all" status, null, or "All" category
-      if (!value || 
-          (key === 'status' && value === 'all') || 
-          (key === 'category_id' && (!value || value === 'all'))) {
-        delete updatedFilters[key];
-      } else {
-        updatedFilters[key] = value;
-      }
+      // Update with new filters or remove keys if they're empty/"all"/null
+      Object.keys(newFilters).forEach(key => {
+        const value = newFilters[key];
+        
+        // Remove keys with empty values, "all" status, null, or "All" category
+        if (!value || 
+            (key === 'status' && value === 'all') || 
+            (key === 'category_id' && (!value || value === 'all'))) {
+          delete updatedFilters[key];
+        } else {
+          updatedFilters[key] = value;
+        }
+      });
+      
+      console.log("Final filters after cleanup:", updatedFilters);
+      return updatedFilters;
     });
-    
-    console.log("Final filters after cleanup:", updatedFilters);
-    setFilters(updatedFilters);
-  }, [filters]);
+  }, []);
 
   const addTask = async (newTask) => {
     if (!newTask.title.trim()) return;
