@@ -44,18 +44,28 @@ const EmptyState = ({ searchQuery, onAddTask }) => {
 };
 
 const TaskList = ({ 
-  filteredTasks, 
+  tasks = [], 
+  filteredTasks,
+  onToggleComplete, 
+  onDeleteTask,
   toggleTaskCompletion, 
   handleDeleteTask, 
-  searchQuery, 
+  searchQuery = "", 
   onReorderTasks, 
-  categories, 
-  onAddTask 
+  categories = [], 
+  onAddTask = () => {} 
 }) => {
+  // Ensure we have a valid list of tasks
+  const taskList = filteredTasks || tasks || [];
+  
+  // Determine which handlers to use
+  const toggleTask = onToggleComplete || toggleTaskCompletion || (() => {});
+  const deleteTask = onDeleteTask || handleDeleteTask || (() => {});
+  
   const handleDragEnd = async (result) => {
-    if (!result.destination) return;
+    if (!result.destination || !onReorderTasks) return;
     
-    const items = Array.from(filteredTasks);
+    const items = Array.from(taskList);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
@@ -82,7 +92,7 @@ const TaskList = ({
 
   return (
     <div className="space-y-4">
-      {filteredTasks.length > 0 ? (
+      {taskList.length > 0 ? (
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="tasks">
             {(provided) => (
@@ -91,8 +101,8 @@ const TaskList = ({
                 ref={provided.innerRef}
                 className="space-y-4"
               >
-                {filteredTasks.map((task, index) => (
-                  <Draggable key={task.id} draggableId={task.id} index={index}>
+                {taskList.map((task, index) => (
+                  <Draggable key={task.id} draggableId={String(task.id)} index={index}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -105,14 +115,16 @@ const TaskList = ({
                       >
                         <TaskItem
                           task={task}
-                          toggleTaskCompletion={toggleTaskCompletion}
-                          handleDeleteTask={handleDeleteTask}
+                          toggleTaskCompletion={toggleTask}
+                          handleDeleteTask={deleteTask}
                           categories={categories}
                           onTaskUpdated={(updatedTask) => {
-                            const newTasks = filteredTasks.map(t => 
-                              t.id === updatedTask.id ? updatedTask : t
-                            );
-                            onReorderTasks(newTasks);
+                            if (onReorderTasks) {
+                              const newTasks = taskList.map(t => 
+                                t.id === updatedTask.id ? updatedTask : t
+                              );
+                              onReorderTasks(newTasks);
+                            }
                           }}
                         />
                       </div>

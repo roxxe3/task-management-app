@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import useProgressAnimation from "../hooks/useProgressAnimation";
 
-const TaskProgress = ({ tasks }) => {
+const TaskProgress = ({ tasks = [] }) => {
   const [stats, setStats] = useState({
     completed: 0,
     total: 0,
     percentage: 0
   });
   
-  const animatedPercentage = useProgressAnimation(stats.percentage);
-
-  useEffect(() => {
+  // Calculate task statistics in a memoized function
+  const calculatedStats = useMemo(() => {
     const completedCount = tasks.filter(task => task.completed).length;
     const totalCount = tasks.length;
     const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-    setStats({
+    
+    return {
       completed: completedCount,
       total: totalCount,
       percentage: percentage
-    });
+    };
   }, [tasks]);
+  
+  // Use the calculated stats to update state only when they change
+  useEffect(() => {
+    setStats(calculatedStats);
+  }, [calculatedStats]);
+  
+  const animatedPercentage = useProgressAnimation(stats.percentage);
 
   const getMotivationalMessage = (percentage) => {
     if (percentage === 0) return "Ready to start your day? Let's tackle these tasks!";
@@ -44,6 +50,11 @@ const TaskProgress = ({ tasks }) => {
       drop-shadow(0 0 4px ${color})
     `
   });
+
+  // Memoize the color calculations
+  const progressColor = useMemo(() => getProgressColor(stats.percentage), [stats.percentage]);
+  const glowStyle = useMemo(() => getGlowStyle(progressColor), [progressColor]);
+  const motivationalMessage = useMemo(() => getMotivationalMessage(stats.percentage), [stats.percentage]);
 
   return (
     <div className="bg-[#2d2d2d] rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
@@ -69,14 +80,14 @@ const TaskProgress = ({ tasks }) => {
             <svg 
               className="w-full h-full absolute top-0 left-0 transform -rotate-90" 
               viewBox="0 0 36 36"
-              style={getGlowStyle(getProgressColor(stats.percentage))}
+              style={glowStyle}
             >
               <circle
                 cx="18"
                 cy="18"
                 r="15.91549431"
                 fill="none"
-                stroke={getProgressColor(stats.percentage)}
+                stroke={progressColor}
                 strokeWidth="3"
                 strokeDasharray={`${animatedPercentage}, 100`}
                 strokeLinecap="round"
@@ -110,11 +121,11 @@ const TaskProgress = ({ tasks }) => {
           <p 
             className="text-base transition-all duration-500" 
             style={{ 
-              color: getProgressColor(stats.percentage),
-              textShadow: `0 0 10px ${getProgressColor(stats.percentage)}40`
+              color: progressColor,
+              textShadow: `0 0 10px ${progressColor}40`
             }}
           >
-            {getMotivationalMessage(stats.percentage)}
+            {motivationalMessage}
           </p>
         </div>
       </div>
@@ -122,4 +133,4 @@ const TaskProgress = ({ tasks }) => {
   );
 };
 
-export default TaskProgress;
+export default React.memo(TaskProgress);

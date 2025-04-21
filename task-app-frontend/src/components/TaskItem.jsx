@@ -22,7 +22,7 @@ const PriorityButton = ({ priority, selectedPriority, onClick }) => (
 );
 
 // Task edit form component
-const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categories }) => (
+const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categories = [] }) => (
   <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
@@ -83,7 +83,7 @@ const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categorie
           Description
         </label>
         <textarea
-          value={editedTask.description}
+          value={editedTask.description || ""}
           onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
           className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none bg-[#3d3d3d] text-white"
           placeholder="Description (optional)"
@@ -111,19 +111,25 @@ const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categorie
   </div>
 );
 
-const TaskItem = ({ task, toggleTaskCompletion, handleDeleteTask, onTaskUpdated, categories }) => {
+const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = () => {}, onTaskUpdated, categories = [] }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isQuickEditing, setIsQuickEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editedTask, setEditedTask] = useState({
-    title: task.title,
-    description: task.description || "",
-    priority: task.priority,
-    category_id: task.category_id
+    title: task?.title || "",
+    description: task?.description || "",
+    priority: task?.priority || "medium",
+    category_id: task?.category_id || null
   });
   const quickEditInputRef = useRef(null);
 
-  const taskCategory = categories?.find(c => c.id === task.category_id);
+  // Make sure task exists and has required properties
+  if (!task || !task.id) {
+    console.error("Task missing or invalid", task);
+    return null;
+  }
+
+  const taskCategory = categories?.find(c => c?.id === task?.category_id);
 
   useEffect(() => {
     if (isQuickEditing && quickEditInputRef.current) {

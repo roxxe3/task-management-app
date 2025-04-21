@@ -3,16 +3,20 @@ import { useState, useEffect, useRef } from 'react';
 const useProgressAnimation = (targetPercentage) => {
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
   const animationTimerRef = useRef(null);
+  const prevTargetRef = useRef(targetPercentage);
 
   useEffect(() => {
+    // Don't animate if there's no change
+    if (prevTargetRef.current === targetPercentage) {
+      return;
+    }
+    
+    // Update the ref to track the latest target
+    prevTargetRef.current = targetPercentage;
+    
     // Clear any existing animation timer
     if (animationTimerRef.current) {
       clearInterval(animationTimerRef.current);
-    }
-
-    // Don't animate if there's no change or on initial render with same value
-    if (animatedPercentage === targetPercentage) {
-      return;
     }
     
     // Define animation parameters
@@ -50,7 +54,7 @@ const useProgressAnimation = (targetPercentage) => {
         clearInterval(animationTimerRef.current);
       }
     };
-  }, [targetPercentage, animatedPercentage]);
+  }, [targetPercentage]); // Only depend on targetPercentage, not animatedPercentage
 
   return animatedPercentage;
 };

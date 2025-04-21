@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 
-const CategoryFilter = ({ categories, activeCategory, setActiveCategory, tasks }) => {
+const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = [] }) => {
   const scrollContainerRef = useRef(null);
 
   const getCategoryTaskCount = (categoryName) => {
@@ -52,7 +52,7 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory, tasks }
                     ? "bg-[#caff17] text-black shadow-lg shadow-[#caff17]/20"
                     : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d] hover:text-white"
                 }`}
-                onClick={() => setActiveCategory(category.name)}
+                onClick={() => onCategoryChange(category.name)}
                 title={`${category.name} (${taskCount} ${taskCount === 1 ? 'task' : 'tasks'})`}
               >
                 <i className={`fas ${category.icon} ${
