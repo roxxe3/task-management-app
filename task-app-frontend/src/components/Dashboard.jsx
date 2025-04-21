@@ -48,14 +48,22 @@ const Dashboard = () => {
     if (searchQuery) {
       newFilters.search = searchQuery;
     }
-    if (activeCategory !== "All") {
+    
+    if (activeCategory && activeCategory !== "All") {
       const category = categories.find(c => c.name === activeCategory);
       if (category) {
         newFilters.category_id = category.id;
       }
+    } else {
+      // Explicitly set category_id to null when "All" is selected
+      newFilters.category_id = null;
     }
-    if (activeStatus !== "all") {
+    
+    if (activeStatus && activeStatus !== "all") {
       newFilters.status = activeStatus;
+    } else {
+      // Explicitly set status to null when "all" is selected
+      newFilters.status = null;
     }
     
     console.log("Setting new filters:", newFilters);
@@ -79,29 +87,40 @@ const Dashboard = () => {
     }
   };
 
-  // Filter tasks based on category, status and search query
-  const filteredTasks = tasks.filter((task) => {
-    const matchesCategory =
-      activeCategory === "All" || 
-      categories.find(c => c.id === task.category_id)?.name === activeCategory;
-    
-    const matchesSearch = task.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = 
-      activeStatus === "all" || 
-      (activeStatus === "completed" && task.completed) ||
-      (activeStatus === "active" && !task.completed);
-    
-    return matchesCategory && matchesSearch && matchesStatus;
-  });
+  // Local filtering for tasks (frontend filtering)
+  const getFilteredTasks = () => {
+    return tasks.filter((task) => {
+      // Filter by category
+      const matchesCategory =
+        activeCategory === "All" || 
+        categories.find(c => c.id === task.category_id)?.name === activeCategory;
+      
+      // Filter by search query
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      
+      // Filter by status
+      const matchesStatus = 
+        activeStatus === "all" || 
+        (activeStatus === "completed" && task.completed) ||
+        (activeStatus === "active" && !task.completed);
+      
+      return matchesCategory && matchesSearch && matchesStatus;
+    });
+  };
 
+  const filteredTasks = getFilteredTasks();
   console.log("Filtered tasks:", filteredTasks.length, "out of", tasks.length);
   
   const handleStatusChange = (status) => {
     console.log("Status changed to:", status);
     setActiveStatus(status);
+  };
+  
+  const handleCategoryChange = (category) => {
+    console.log("Category changed to:", category);
+    setActiveCategory(category);
   };
 
   return (
@@ -136,7 +155,7 @@ const Dashboard = () => {
             <CategoryFilter 
               categories={categories}
               activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
+              onCategoryChange={handleCategoryChange}
               tasks={tasks}
             />
           </div>

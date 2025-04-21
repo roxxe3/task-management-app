@@ -8,7 +8,7 @@ export const useTaskManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
-  const prevFiltersRef = useRef(filters);
+  const prevFiltersRef = useRef({});
 
   // Custom comparison function for objects
   const areFiltersEqual = (a, b) => {
@@ -44,6 +44,12 @@ export const useTaskManagement = () => {
     }
   }, []);
 
+  // Load initial tasks on component mount
+  useEffect(() => {
+    console.log("Initial tasks load");
+    loadTasks({});
+  }, [loadTasks]);
+
   // Load initial tasks when filters change
   useEffect(() => {
     // Only reload if filters have actually changed
@@ -53,12 +59,6 @@ export const useTaskManagement = () => {
       loadTasks(filters);
     }
   }, [filters, loadTasks]);
-
-  // Load tasks on initial render
-  useEffect(() => {
-    console.log("Initial tasks load");
-    loadTasks({});
-  }, [loadTasks]);
 
   // Load categories
   useEffect(() => {
@@ -88,8 +88,27 @@ export const useTaskManagement = () => {
 
   const updateFilters = useCallback((newFilters) => {
     console.log("Updating filters:", newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
+    
+    // Create a clean copy of current filters
+    const updatedFilters = { ...filters };
+    
+    // Update with new filters or remove keys if they're empty/"all"/null
+    Object.keys(newFilters).forEach(key => {
+      const value = newFilters[key];
+      
+      // Remove keys with empty values, "all" status, null, or "All" category
+      if (!value || 
+          (key === 'status' && value === 'all') || 
+          (key === 'category_id' && (!value || value === 'all'))) {
+        delete updatedFilters[key];
+      } else {
+        updatedFilters[key] = value;
+      }
+    });
+    
+    console.log("Final filters after cleanup:", updatedFilters);
+    setFilters(updatedFilters);
+  }, [filters]);
 
   const addTask = async (newTask) => {
     if (!newTask.title.trim()) return;

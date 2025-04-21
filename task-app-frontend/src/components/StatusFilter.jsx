@@ -8,14 +8,18 @@ const StatusFilter = ({ activeStatus, onStatusChange }) => {
   ];
 
   const handleStatusChange = (statusId) => {
-    console.log("Status changed to:", statusId);
-    onStatusChange(statusId);
+    console.log("Status filter changing to:", statusId);
+    
+    // Force status to be "all" if it's null or undefined
+    const newStatus = statusId || "all";
+    
+    onStatusChange(newStatus);
   };
 
   return (
     <div className="mb-4">
       <h3 className="text-lg font-medium text-white mb-2">Status Filter</h3>
-      <div className="flex gap-2 px-2">
+      <div className="flex flex-wrap gap-2 px-2">
         {statuses.map((status) => (
           <button
             key={status.id}
@@ -25,9 +29,11 @@ const StatusFilter = ({ activeStatus, onStatusChange }) => {
                 ? 'bg-[#caff17] text-black shadow-lg shadow-[#caff17]/20' 
                 : 'bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]'
               }`}
+            aria-pressed={activeStatus === status.id}
+            data-status={status.id}
           >
             <i className={`fas ${status.icon}`}></i>
-            {status.name}
+            {status.name} 
           </button>
         ))}
       </div>

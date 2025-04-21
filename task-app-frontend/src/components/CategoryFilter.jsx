@@ -22,8 +22,15 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = 
     }
   };
 
+  const handleCategoryChange = (categoryName) => {
+    console.log("Category filter changing to:", categoryName);
+    onCategoryChange(categoryName || "All");
+  };
+
   return (
     <div className="mb-8 relative md:px-16">
+      <h3 className="text-lg font-medium text-white mb-2 ml-4">Categories</h3>
+      
       {/* Left Arrow - Hidden on mobile */}
       <button
         onClick={() => scroll('left')}
@@ -52,8 +59,10 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange, tasks = 
                     ? "bg-[#caff17] text-black shadow-lg shadow-[#caff17]/20"
                     : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d] hover:text-white"
                 }`}
-                onClick={() => onCategoryChange(category.name)}
+                onClick={() => handleCategoryChange(category.name)}
                 title={`${category.name} (${taskCount} ${taskCount === 1 ? 'task' : 'tasks'})`}
+                data-category={category.name}
+                aria-pressed={activeCategory === category.name}
               >
                 <i className={`fas ${category.icon} ${
                   activeCategory === category.name ? 'text-black' : 'text-gray-400'
