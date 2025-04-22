@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { updateTask } from "../services/taskService";
-import PriorityButton from "./task/PriorityButton";
 import TaskEditForm from "./task/TaskEditForm";
 
 const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = () => {}, onTaskUpdated, categories = [] }) => {

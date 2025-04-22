@@ -201,6 +201,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const clearVerificationState = () => {
+    setNeedsEmailVerification(false);
+    setVerificationEmail("");
+    setError(null);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -214,7 +220,8 @@ export const AuthProvider = ({ children }) => {
         needsEmailVerification,
         verificationEmail,
         confirmEmailVerification,
-        resendVerificationEmail
+        resendVerificationEmail,
+        clearVerificationState
       }}
     >
       {children}
