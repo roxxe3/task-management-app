@@ -78,9 +78,9 @@ const Login = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: "#1a1a1a" }}
+      style={{ backgroundColor: "#0C0D0D" }}
     >
-      <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md">
+      <div className="bg-[#171818] p-8 rounded-xl shadow-lg w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <img src={TLogo} alt="Task Manager Logo" className="h-16 w-16 mb-4" />
           <h2 className="text-2xl font-bold text-white text-center">

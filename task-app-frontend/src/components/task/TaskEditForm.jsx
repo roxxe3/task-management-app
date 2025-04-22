@@ -10,7 +10,7 @@ import PriorityButton from "./PriorityButton";
  * @param {Array} categories - Available categories for the task
  */
 const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categories = [] }) => (
-  <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
+  <div className="bg-[#171818] rounded-xl shadow-sm p-6">
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -106,4 +106,4 @@ const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categorie
   </div>
 );
 
-export default TaskEditForm; 
+export default TaskEditForm;

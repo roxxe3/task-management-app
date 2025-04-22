@@ -79,9 +79,9 @@ const EmailConfirmation = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: "#1a1a1a" }}
+      style={{ backgroundColor: "#0C0D0D" }}
     >
-      <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+      <div className="bg-[#171818] p-8 rounded-xl shadow-lg w-full max-w-md text-center">
         <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${content.bgColor}`}>
           <i className={`fas fa-${content.icon} ${content.color} text-3xl`}></i>
         </div>
@@ -104,4 +104,4 @@ const EmailConfirmation = () => {
   );
 };
 
-export default EmailConfirmation; 
+export default EmailConfirmation;

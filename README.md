@@ -3,6 +3,20 @@
 ## Overview
 A modern, responsive task management application built with React and Node.js, featuring drag-and-drop task prioritization, category management, and user authentication powered by Supabase.
 
+## Screenshots
+
+### Login Screen
+![Login Screen](login.png)
+
+### Dashboard
+![Dashboard View](dashboard.png)
+
+### Task Management
+![Task Management](addtask.png)
+
+### Drag and Drop Functionality
+![Drag and Drop](drag&drop.png)
+
 ## Technologies Used
 - **Frontend**: React 19, Tailwind CSS, Vite, @hello-pangea/dnd
 - **Backend**: Node.js, Express

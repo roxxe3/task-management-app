@@ -20,7 +20,7 @@ const EmptyState = ({ searchQuery, onAddTask }) => {
       };
 
   return (
-    <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 text-center">
+    <div className="bg-[#171818] rounded-xl shadow-sm p-8 text-center">
       <div className="w-32 h-32 mx-auto mb-6 relative">
         <div className="absolute inset-0 bg-[#caff17] opacity-10 rounded-full animate-ping"></div>
         <div className="relative flex items-center justify-center w-full h-full">

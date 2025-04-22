@@ -104,7 +104,7 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
 
   return (
     <div
-      className={`bg-[#2d2d2d] rounded-xl p-4 mb-3 relative transition-all duration-300 task-item ${
+      className={`bg-[#171818] rounded-xl p-4 mb-3 relative transition-all duration-300 task-item ${
         task.completed ? "opacity-60" : ""
       }`}
     >

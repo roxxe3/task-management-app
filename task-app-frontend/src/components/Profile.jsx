@@ -21,7 +21,7 @@ const Profile = () => {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: "#1a1a1a", color: "#ffffff" }}
+      style={{ backgroundColor: "#0C0D0D", color: "#ffffff" }}
     >
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header Section */}
@@ -38,7 +38,7 @@ const Profile = () => {
         </header>
 
         {/* Profile Section */}
-        <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8 mb-8">
+        <div className="bg-[#171818] rounded-xl shadow-sm p-8 mb-8">
           <div className="flex flex-col items-center">
             {/* Profile Image */}
             <div className="relative mb-6">
@@ -76,7 +76,7 @@ const Profile = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-8">
+        <div className="bg-[#171818] rounded-xl shadow-sm p-8">
           <h3 className="text-lg font-semibold mb-4 text-red-500">Danger Zone</h3>
           <button
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"

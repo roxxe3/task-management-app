@@ -114,7 +114,7 @@ const Dashboard = () => {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: "#1a1a1a", color: "#ffffff" }}
+      style={{ backgroundColor: "#0C0D0D", color: "#ffffff" }}
     >
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Header />
@@ -139,7 +139,7 @@ const Dashboard = () => {
             </div>
           )}
           
-          <div className="bg-[#212121] rounded-xl p-2 sm:p-3 mb-4 sm:mb-6">
+          <div className="bg-[#171818] rounded-xl p-2 sm:p-3 mb-4 sm:mb-6">
             <div className="flex flex-col space-y-2 sm:space-y-4">
               <CategoryFilter 
                 categories={categories}

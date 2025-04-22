@@ -52,7 +52,7 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
         <div
           id="profileDropdown"
           ref={profileDropdownRef}
-          className="absolute right-0 mt-2 w-56 bg-[#2d2d2d] rounded-xl shadow-lg py-2 z-50"
+          className="absolute right-0 mt-2 w-56 bg-[#171818] rounded-xl shadow-lg py-2 z-50"
         >
           <Link
             to="/profile"

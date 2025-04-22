@@ -107,7 +107,7 @@ const AddTaskModal = ({
     >
       <div
         ref={modalRef}
-        className="bg-[#2d2d2d] rounded-xl shadow-lg p-6 w-full max-w-md mx-4"
+        className="bg-[#171818] rounded-xl shadow-lg p-6 w-full max-w-md mx-4"
         onKeyDown={handleKeyDown}
       >
         <h2 id="modal-title" className="text-xl font-semibold mb-4 text-white">Add New Task</h2>

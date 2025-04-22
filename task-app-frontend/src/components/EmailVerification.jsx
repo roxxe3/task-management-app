@@ -43,10 +43,10 @@ const EmailVerification = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: "#1a1a1a" }}
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: "#0C0D0D" }}
     >
-      <div className="bg-[#2d2d2d] p-8 rounded-xl shadow-lg w-full max-w-md">
+      <div className="bg-[#171818] p-8 rounded-xl shadow-lg w-full max-w-md">
         <div className="text-center mb-6">
           <div className="w-20 h-20 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-envelope text-yellow-500 text-3xl"></i>

@@ -57,7 +57,7 @@ const TaskProgress = ({ tasks = [] }) => {
   const motivationalMessage = useMemo(() => getMotivationalMessage(stats.percentage), [stats.percentage]);
 
   return (
-    <div className="bg-[#2d2d2d] rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+    <div className="bg-[#171818] rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
       <div className="flex flex-col sm:flex-row items-center">
         <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 flex-shrink-0">
           <div className="w-full h-full relative">
