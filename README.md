@@ -42,7 +42,7 @@ PORT=3000
 
 1. Clone the repository
 ```bash
-git clone [repository-url]
+git clone https://github.com/roxxe3/task-management-app
 cd task-management-app
 ```
 
