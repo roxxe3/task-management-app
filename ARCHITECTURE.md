@@ -23,33 +23,12 @@
     PORT=3000
     ```
 
+## Database Setup
+For database setup instructions, please refer to the [README.md](./README.md#setup-instructions) file.
+
 ## Database Schema
 
-### Tasks Table
-```sql
-CREATE TABLE tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  description TEXT,
-  priority TEXT DEFAULT 'medium',
-  completed BOOLEAN DEFAULT false,
-  category_id UUID REFERENCES categories(id),
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Categories Table
-```sql
-CREATE TABLE categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL UNIQUE,
-  color TEXT DEFAULT '#2d2d2d',
-  icon TEXT DEFAULT 'fa-folder',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
+Refer to the `backend/database-setup.sql` file for the complete database schema.
 
 ## Security Implementation
 
@@ -119,4 +98,4 @@ CREATE TABLE categories (
 2. Adding offline support with Service Workers
 3. Implementing file attachments for tasks
 4. Adding team collaboration features
-5. Implementing activity logging and analytics 
+5. Implementing activity logging and analytics

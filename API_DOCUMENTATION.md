@@ -12,6 +12,9 @@ All API endpoints except authentication endpoints require a valid JWT token in t
 Authorization: Bearer <your_jwt_token>
 ```
 
+## Database Setup
+For Supabase database setup instructions, please refer to the [README.md](./README.md#setup-instructions) file.
+
 ## Endpoints
 
 ### Authentication
@@ -205,19 +208,6 @@ interface Category {
 }
 ```
 
-## WebSocket Events
-Real-time updates are available through Supabase subscriptions:
-
-### Task Updates
-```javascript
-supabase
-  .from('tasks')
-  .on('*', payload => {
-    console.log('Change received!', payload)
-  })
-  .subscribe()
-```
-
 ## Examples
 
 ### Creating a Task with cURL
@@ -237,4 +227,4 @@ curl -X POST http://localhost:5000/api/tasks \
 ```bash
 curl http://localhost:5000/api/tasks?priority=high&status=active \
   -H "Authorization: Bearer <your_jwt_token>"
-``` 
+```

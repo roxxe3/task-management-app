@@ -61,11 +61,11 @@ npm run dev
 ```
 
 4. Database Setup
-```bash
-cd backend
-node database-setup.sql    # Initialize database schema
-node seed-categories.js    # Seed initial categories
-```
+- Create a new Supabase project at https://supabase.com
+- Get your project credentials from Settings > API
+- Set the credentials in your .env file
+- Open the SQL Editor in your Supabase dashboard
+- Run the SQL from backend/database-setup.sql
 
 ## Project Structure
 
