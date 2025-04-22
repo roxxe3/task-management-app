@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Main App component wrapped with AuthProvider
-const AppWithAuth = () => (
+const App = () => (
   <AuthProvider>
     <Router>
       <Routes>
@@ -55,4 +55,4 @@ const AppWithAuth = () => (
   </AuthProvider>
 );
 
-export default AppWithAuth;
+export default App;

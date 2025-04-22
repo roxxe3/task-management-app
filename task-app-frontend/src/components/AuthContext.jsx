@@ -103,6 +103,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
+      console.log('Attempting signup for:', email);
       const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
@@ -111,17 +112,45 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password, name }),
       });
       
+      console.log('Signup response status:', response.status);
       const data = await response.json();
+      console.log('Signup response data:', data);
       
-      if (response.ok) {
+      // Always check for error messages first
+      if (data.error) {
+        console.log('Signup error from server:', data.error);
+        setError(data.error);
+        return false;
+      }
+      
+      // If no error but response is not ok, something went wrong
+      if (!response.ok) {
+        console.log('Response not OK:', response.status);
+        setError('Registration failed');
+        return false;
+      }
+
+      // Only proceed if we have a success message and no errors
+      if (data.message?.toLowerCase().includes('verify')) {
+        console.log('Email verification required');
         setNeedsEmailVerification(true);
         setVerificationEmail(email);
         setError("Account created! Please check your email to verify your account.");
         return true;
-      } else {
-        setError(data.error || 'Registration failed');
-        return false;
       }
+
+      // If we have user data, account was created and verified
+      if (data.user && data.token) {
+        console.log('Account created and verified');
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        return true;
+      }
+
+      // Fallback error if we get here
+      console.log('Unexpected response:', data);
+      setError('Unexpected response from server');
+      return false;
     } catch (error) {
       console.error("Signup error:", error);
       setError("Failed to connect to the server. Please try again.");
@@ -237,4 +266,4 @@ export const useAuth = () => {
   return context;
 };
 
-export default AuthContext;
+export { AuthContext };

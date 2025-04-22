@@ -1,11 +1,27 @@
-# React + Vite
+# Task Management App Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This frontend application provides a user interface for managing tasks with React and Vite.
 
-Currently, two official plugins are available:
+## API Integration Notice
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The frontend attempts to use the following authentication endpoints:
+
+- `POST /api/auth/signup` - Register a new user ✅ *Implemented*
+- `POST /api/auth/login` - Authenticate user & get token ✅ *Implemented*
+- `GET /api/auth/validate-token` - Validate user token ✅ *Implemented*
+- `POST /api/auth/logout` - Log out user ✅ *Implemented*
+- `POST /api/auth/confirm-email` - Confirm user email ⚠️ *Not implemented in backend*
+- `POST /api/auth/resend-verification` - Resend verification email ⚠️ *Not implemented in backend*
+
+**⚠️ IMPORTANT**: The frontend code expects endpoints for email verification that are not currently implemented in the backend. For full functionality, implement these endpoints in the backend `auth.js` file.
+
+## Development
+
+To start the development server:
+
+```bash
+npm run dev
+```
 
 ## Expanding the ESLint configuration
 

@@ -13,24 +13,61 @@ const authMiddleware = require('../middleware/auth');
  */
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Signup attempt for email:', req.body.email);
     const { email, password, name } = req.body;
 
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    // Try to sign in with the email to check if it exists
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'dummy-password-for-check' // Use a dummy password
+    });
+
+    console.log('Sign in check response:', signInError);
+
+    // If there's no error or the error is about invalid credentials (not user not found),
+    // then the user exists
+    if (!signInError || signInError.message?.includes('Invalid login credentials')) {
+      console.log('User already exists:', email);
+      return res.status(400).json({ error: 'An account with this email already exists' });
+    }
+
     // Register user with Supabase auth
+    console.log('Attempting to create user...');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name }
+        data: { name },
+        emailRedirectTo: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email`
       }
     });
 
+    console.log('Signup response:', { data, error });
+
     if (error) {
       console.error('Signup error:', error);
+      
+      // Check for existing user errors
+      if (error.message?.toLowerCase().includes('already registered') || 
+          error.message?.toLowerCase().includes('already exists') ||
+          error.status === 400) {
+        return res.status(400).json({ error: 'An account with this email already exists' });
+      }
+      
       return res.status(400).json({ error: error.message });
+    }
+
+    // If we get here and there's no session, it means email verification is required
+    if (!data.session) {
+      console.log('Email verification required');
+      return res.status(400).json({
+        error: 'An account with this email already exists'
+      });
     }
 
     // Return user data and session
@@ -40,13 +77,11 @@ router.post('/signup', async (req, res) => {
       name: data.user.user_metadata?.name || '',
     };
 
-    // Check if email confirmation is pending (no session token means email confirmation required)
-    const emailVerified = !!data.session?.access_token;
-
+    console.log('User created successfully:', userData);
     res.status(201).json({
       user: userData,
-      token: data.session?.access_token || '',
-      emailVerified: emailVerified
+      token: data.session.access_token,
+      emailVerified: true
     });
   } catch (error) {
     console.error('Server error during signup:', error);
