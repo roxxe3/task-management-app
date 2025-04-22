@@ -1,23 +1,7 @@
 /**
  * Authentication middleware for protecting API routes using Supabase JWT tokens
  */
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing required Supabase environment variables');
-}
-
-// Initialize supabase client outside request handler for better performance
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false }
-});
+const { supabase } = require('../supabaseClient');
 
 const authMiddleware = async (req, res, next) => {
   try {

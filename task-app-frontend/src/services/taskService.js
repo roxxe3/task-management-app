@@ -5,7 +5,7 @@ import { API_URL } from "../config";
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
   if (!token) {
-    throw new Error('No authentication token found');
+    throw new Error('Authentication required: Please log in to continue');
   }
   return {
     'Content-Type': 'application/json',
@@ -14,20 +14,33 @@ const getAuthHeaders = () => {
 };
 
 // Helper function to handle API responses
-const handleResponse = async (response, errorMessage) => {
+const handleResponse = async (response, errorContext) => {
   if (!response.ok) {
     if (response.status === 401) {
-      // Store auth error for special handling upstream
-      throw new Error('Authentication error: Please log in again');
+      // Handle authentication errors
+      localStorage.removeItem('authToken'); // Clear invalid token
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    if (response.status === 403) {
+      throw new Error('You do not have permission to perform this action');
+    }
+    
+    if (response.status === 404) {
+      throw new Error(`${errorContext} not found`);
+    }
+    
+    if (response.status === 429) {
+      throw new Error('Too many requests. Please try again later.');
     }
     
     // Try to get detailed error from response if available
     try {
       const errorData = await response.json();
-      throw new Error(errorData.error || errorData.message || errorMessage);
+      throw new Error(errorData.error || errorData.message || `${errorContext}: An unexpected error occurred`);
     } catch (e) {
-      // If parsing fails, use the generic message
-      throw new Error(errorMessage);
+      // If parsing fails, use the context-aware message
+      throw new Error(`${errorContext}: ${response.statusText || 'An unexpected error occurred'}`);
     }
   }
   return response.status === 204 ? null : response.json();
@@ -39,9 +52,12 @@ export const fetchTasks = async (filters = {}) => {
     const queryParams = new URLSearchParams(filters).toString();
     const url = `${API_URL}/tasks${queryParams ? `?${queryParams}` : ''}`;
     const response = await fetch(url, { headers: getAuthHeaders() });
-    return handleResponse(response, "Failed to fetch tasks");
+    return await handleResponse(response, "Failed to load tasks");
   } catch (error) {
-    throw error;
+    console.error("Task fetch error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error loading tasks: ${error.message}`);
   }
 };
 
@@ -53,9 +69,12 @@ export const createTask = async (taskData) => {
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
-    return handleResponse(response, "Failed to create task");
+    return await handleResponse(response, "Failed to create task");
   } catch (error) {
-    throw error;
+    console.error("Task creation error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error creating task: ${error.message}`);
   }
 };
 
@@ -67,9 +86,12 @@ export const updateTask = async (id, taskData) => {
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
-    return handleResponse(response, "Failed to update task");
+    return await handleResponse(response, "Failed to update task");
   } catch (error) {
-    throw error;
+    console.error("Task update error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error updating task: ${error.message}`);
   }
 };
 
@@ -83,7 +105,10 @@ export const deleteTask = async (id) => {
     await handleResponse(response, "Failed to delete task");
     return true;
   } catch (error) {
-    throw error;
+    console.error("Task deletion error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error deleting task: ${error.message}`);
   }
 };
 
@@ -98,9 +123,12 @@ export const fetchTask = async (id) => {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response, "Failed to fetch task");
+    return await handleResponse(response, "Failed to load task details");
   } catch (error) {
-    throw error;
+    console.error("Task fetch error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error loading task details: ${error.message}`);
   }
 };
 
@@ -112,12 +140,15 @@ export const updateTaskPositions = async (taskPositions) => {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ newPosition: position }),
-      }).then(response => handleResponse(response, "Failed to update task position"))
+      }).then(response => handleResponse(response, "Failed to update task order"))
     );
     
     await Promise.all(updatePromises);
     return true;
   } catch (error) {
-    throw error;
+    console.error("Task reordering error:", error);
+    throw error.message?.includes('Authentication') 
+      ? error 
+      : new Error(`Error updating task order: ${error.message}`);
   }
 };

@@ -3,21 +3,8 @@
  */
 const express = require('express');
 const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
+const { supabase } = require('../supabaseClient');
 const authMiddleware = require('../middleware/auth');
-
-// Load environment variables
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing required Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
  * @route   POST /api/auth/signup

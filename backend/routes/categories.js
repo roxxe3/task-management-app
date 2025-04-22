@@ -2,18 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { supabase, getSupabaseWithAuth } = require("../supabaseClient");
 const authMiddleware = require("../middleware/auth");
-const { v4: uuidv4 } = require('uuid'); // Add UUID package
-
-// Mock data for development
-const mockCategories = [
-  {
-    id: 1,
-    name: "Work",
-    color: "#0284c7",
-    icon: "fa-briefcase",
-    created_at: new Date().toISOString()
-  }
-];
 
 // Default categories fallback
 const defaultCategories = [

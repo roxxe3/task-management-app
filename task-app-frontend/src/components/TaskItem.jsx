@@ -1,123 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { updateTask } from "../services/taskService";
-
-// Priority button component
-const PriorityButton = ({ priority, selectedPriority, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`px-4 py-2 rounded-lg capitalize !rounded-button whitespace-nowrap transition-all duration-200 cursor-pointer ${
-      selectedPriority === priority
-        ? priority === 'high'
-          ? 'bg-red-500 text-white'
-          : priority === 'medium'
-            ? 'bg-yellow-500 text-black'
-            : 'bg-green-500 text-white'
-        : "bg-[#3d3d3d] text-gray-300 hover:bg-[#4d4d4d]"
-    }`}
-  >
-    <i className={`fas fa-flag mr-2 ${selectedPriority === priority ? 'text-current' : 'text-gray-400'}`}></i>
-    {priority}
-  </button>
-);
-
-// Task edit form component
-const TaskEditForm = ({ editedTask, setEditedTask, onSubmit, onCancel, categories = [] }) => (
-  <div className="bg-[#2d2d2d] rounded-xl shadow-sm p-6">
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Title <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={editedTask.title}
-          onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[#3d3d3d] text-white"
-          placeholder="Task title"
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Category <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <select
-            value={editedTask.category_id || ""}
-            onChange={(e) => setEditedTask({ ...editedTask, category_id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-[#3d3d3d] text-white"
-          >
-            <option value="">Select a category</option>
-            {categories?.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            <i className="fas fa-chevron-down text-gray-400"></i>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Priority
-        </label>
-        <div className="flex space-x-4">
-          {["high", "medium", "low"].map((priority) => (
-            <PriorityButton
-              key={priority}
-              priority={priority}
-              selectedPriority={editedTask.priority}
-              onClick={() => setEditedTask({ ...editedTask, priority })}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Description
-        </label>
-        <textarea
-          value={editedTask.description || ""}
-          onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none bg-[#3d3d3d] text-white"
-          placeholder="Description (optional)"
-          rows="2"
-        />
-      </div>
-
-      <div className="flex justify-end space-x-4 mt-6">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-[#3d3d3d] transition-colors !rounded-button whitespace-nowrap cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg !rounded-button whitespace-nowrap transition-all duration-200 cursor-pointer"
-          style={{ backgroundColor: "#caff17", color: "#0d0d0d" }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = "#ffffff";
-            e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(202, 255, 23, 0.4), 0 2px 4px -1px rgba(202, 255, 23, 0.2)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = "#caff17";
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        >
-          Save Changes
-        </button>
-      </div>
-    </form>
-  </div>
-);
+import PriorityButton from "./task/PriorityButton";
+import TaskEditForm from "./task/TaskEditForm";
 
 const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = () => {}, onTaskUpdated, categories = [] }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -201,10 +85,12 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
       handleQuickEditSubmit();
     } else if (e.key === 'Escape') {
       setIsQuickEditing(false);
+      // Reset to original title
       setEditedTask(prev => ({ ...prev, title: task.title }));
     }
   };
 
+  // Showing the edit form
   if (isEditing) {
     return (
       <TaskEditForm
@@ -218,155 +104,117 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
   }
 
   return (
-    <div className="bg-[#2d2d2d] rounded-xl shadow-sm overflow-hidden">
-      <div className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center">
-          {/* Checkbox and Title */}
-          <div className="flex-1 flex items-start gap-3 min-w-0">
-            <div className="flex-shrink-0 flex items-center h-full pt-1.5 sm:pt-0">
-              <button
-                onClick={() => toggleTaskCompletion(task.id)}
-                className="cursor-pointer flex items-center justify-center"
-                aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
-              >
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                  task.completed 
-                    ? 'bg-green-500 border-green-500 shadow-sm shadow-green-500/30' 
-                    : 'border-gray-400 hover:border-gray-300'
-                }`}>
-                  {task.completed && (
-                    <i className="fas fa-check text-white text-[10px]"></i>
-                  )}
-                </div>
-              </button>
-            </div>
-
-            {isQuickEditing ? (
-              <input
-                ref={quickEditInputRef}
-                type="text"
-                value={editedTask.title}
-                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-                onBlur={handleQuickEditSubmit}
-                onKeyDown={handleKeyDown}
-                className="flex-1 bg-[#3d3d3d] text-white px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
-              />
-            ) : (
-              <div 
-                onClick={() => setIsQuickEditing(true)}
-                className="flex-1 cursor-pointer min-w-0"
-              >
-                <h3 className={`text-lg font-medium truncate ${task.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
-                  {task.title}
-                </h3>
-                {task.description && (
-                  <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                    {task.description}
-                  </p>
-                )}
-              </div>
+    <div
+      className={`bg-[#2d2d2d] rounded-xl p-4 mb-3 relative transition-all duration-300 task-item ${
+        task.completed ? "opacity-60" : ""
+      }`}
+    >
+      {/* Task Header */}
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center">
+          <button
+            onClick={() => toggleTaskCompletion(task.id)}
+            className={`w-5 h-5 rounded-full border flex-shrink-0 mr-3 transition-colors hover:border-green-400 ${
+              task.completed
+                ? "bg-green-500 border-green-500"
+                : "border-gray-500"
+            }`}
+            aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
+          >
+            {task.completed && (
+              <i className="fas fa-check text-xs text-white flex justify-center items-center h-full"></i>
             )}
-          </div>
+          </button>
 
-          {/* Task Metadata - Different layouts for mobile and desktop */}
-          <div className="hidden sm:flex items-center gap-4 ml-4">
-            {/* Desktop layout */}
-            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              task.priority === 'high' ? 'bg-red-500 text-white' :
-              task.priority === 'medium' ? 'bg-yellow-500 text-black' :
-              'bg-green-500 text-white'
-            }`}>
-              <i className="fas fa-flag mr-2"></i>
-              {task.priority}
-            </span>
-            {taskCategory && (
-              <span
-                className="px-4 py-1.5 rounded-lg text-sm font-medium"
-                style={getCategoryStyle()}
-              >
-                <i className={`fas ${taskCategory.icon || 'fa-folder'} mr-2`}></i>
-                {taskCategory.name}
-              </span>
-            )}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
-              >
-                <i className="fas fa-edit text-gray-400"></i>
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
-              >
-                <i className="fas fa-trash text-gray-400"></i>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile layout */}
-          <div className="sm:hidden mt-3 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {taskCategory && (
-                <span
-                  className="px-3 py-1 rounded-full text-sm font-medium"
-                  style={getCategoryStyle()}
-                >
-                  <i className={`fas ${taskCategory.icon || 'fa-folder'} mr-2`}></i>
-                  {taskCategory.name}
-                </span>
-              )}
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                task.priority === 'high' ? 'bg-red-500 text-white' :
-                task.priority === 'medium' ? 'bg-yellow-500 text-black' :
-                'bg-green-500 text-white'
-              }`}>
-                <i className="fas fa-flag mr-2"></i>
-                {task.priority}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 border-t pt-3">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
-              >
-                <i className="fas fa-edit text-gray-400"></i>
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
-              >
-                <i className="fas fa-trash text-gray-400"></i>
-              </button>
-            </div>
-          </div>
+          {isQuickEditing ? (
+            <input
+              type="text"
+              ref={quickEditInputRef}
+              value={editedTask.title}
+              onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+              onBlur={handleQuickEditSubmit}
+              onKeyDown={handleKeyDown}
+              className="text-white bg-[#3d3d3d] p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+          ) : (
+            <h3
+              className={`font-medium text-lg leading-tight mr-2 ${
+                task.completed ? "line-through text-gray-400" : "text-white"
+              }`}
+              onClick={() => setIsQuickEditing(true)}
+            >
+              {task.title}
+            </h3>
+          )}
         </div>
 
-        {/* Created/Updated Date */}
-        <div className="mt-3 text-xs text-gray-400">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <i className="far fa-calendar mr-1"></i>
-              <span>Created: {formatDate(task.created_at)}</span>
-            </div>
-            {task.updated_at && task.updated_at !== task.created_at && (
-              <div className="flex items-center">
-                <i className="far fa-clock mr-1"></i>
-                <span>Updated: {formatDate(task.updated_at)}</span>
-              </div>
-            )}
-          </div>
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-gray-400 hover:text-white transition-colors p-1"
+            aria-label="Edit task"
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+            aria-label="Delete task"
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
         </div>
       </div>
 
-      {/* Delete Confirmation */}
+      {/* Task Details */}
+      <div className="pl-8 space-y-2">
+        {task.description && (
+          <p className="text-gray-300 text-sm">{task.description}</p>
+        )}
+        
+        <div className="flex flex-wrap gap-2 mt-2">
+          {taskCategory && (
+            <span
+              className="inline-flex items-center text-xs px-2 py-1 rounded-full"
+              style={getCategoryStyle()}
+            >
+              <i className={`fas ${taskCategory.icon} mr-1`}></i>
+              {taskCategory.name}
+            </span>
+          )}
+          
+          <span
+            className={`inline-flex items-center text-xs px-2 py-1 rounded-full ${
+              task.priority === "high"
+                ? "bg-red-500 text-white"
+                : task.priority === "medium"
+                ? "bg-yellow-500 text-black"
+                : "bg-green-500 text-white"
+            }`}
+          >
+            <i className="fas fa-flag mr-1"></i>
+            {task.priority}
+          </span>
+          
+          <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300">
+            <i className="far fa-clock mr-1"></i>
+            {formatDate(task.created_at)}
+          </span>
+        </div>
+      </div>
+      
+      {/* Delete confirmation */}
       {showDeleteConfirm && (
-        <div className="border-t border-gray-700 p-4 bg-[#262626]">
-          <p className="text-gray-300 mb-4">Are you sure you want to delete this task?</p>
-          <div className="flex justify-end space-x-3">
+        <div className="absolute inset-0 bg-[#1e1e1e] bg-opacity-95 z-10 flex flex-col items-center justify-center rounded-xl p-4">
+          <p className="text-white mb-4 text-center">
+            Are you sure you want to delete this task?
+          </p>
+          <div className="flex space-x-4">
             <button
               onClick={() => setShowDeleteConfirm(false)}
-              className="px-4 py-2 text-sm text-gray-300 hover:bg-[#3d3d3d] rounded-lg transition-colors cursor-pointer"
+              className="px-4 py-2 bg-[#3d3d3d] text-white rounded-lg hover:bg-[#4d4d4d] transition-colors"
             >
               Cancel
             </button>
@@ -375,7 +223,7 @@ const TaskItem = ({ task, toggleTaskCompletion = () => {}, handleDeleteTask = ()
                 handleDeleteTask(task.id);
                 setShowDeleteConfirm(false);
               }}
-              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Delete
             </button>
