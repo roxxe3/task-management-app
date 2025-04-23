@@ -117,35 +117,6 @@ GET /categories
 GET /categories/:categoryId
 ```
 
-#### Create Category
-```http
-POST /categories
-Content-Type: application/json
-
-{
-  "name": "Work",
-  "color": "#FF5733",
-  "icon": "fa-briefcase"
-}
-```
-
-#### Update Category
-```http
-PUT /categories/:categoryId
-Content-Type: application/json
-
-{
-  "name": "Personal",
-  "color": "#33FF57",
-  "icon": "fa-user"
-}
-```
-
-#### Delete Category
-```http
-DELETE /categories/:categoryId
-```
-
 ## Response Formats
 
 ### Success Response
