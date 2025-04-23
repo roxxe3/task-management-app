@@ -109,15 +109,3 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for detailed API endpoints an
 ## Architecture Decisions
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed implementation decisions and technical architecture.
 
-## AI Tools Usage
-See [AI_USAGE.md](./AI_USAGE.md) for documentation on AI tools used in development.
-
-## Contributing
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
